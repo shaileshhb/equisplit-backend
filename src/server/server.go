@@ -68,6 +68,8 @@ func (ser *Server) RegisterRoutes(controllers []Controller) {
 func (ser *Server) MigrateTables() {
 	lo.Must0(ser.DB.AutoMigrate(&models.User{}))
 	lo.Must0(ser.DB.AutoMigrate(&models.Group{}))
+	lo.Must0(ser.DB.AutoMigrate(&models.UserGroup{}))
+	lo.Must0(ser.DB.AutoMigrate(&models.UserGroupHistory{}))
 
 	config := models.NewModuleConfig(ser.DB)
 	config.TableMigration(ser.WG)

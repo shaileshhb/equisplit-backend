@@ -18,7 +18,7 @@ type userController struct {
 	db *gorm.DB
 }
 
-func NewuserController(db *gorm.DB) UserController {
+func NewUserController(db *gorm.DB) UserController {
 	return &userController{
 		db: db,
 	}
@@ -58,7 +58,7 @@ func (ser *userController) Login(user *models.User) error {
 	defer uow.RollBack()
 
 	tempUser := &models.User{}
-	err := uow.DB.First(tempUser).Error
+	err := uow.DB.Where("users.email = ?", user.Email).First(tempUser).Error
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return errors.New("email not registered")

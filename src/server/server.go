@@ -67,7 +67,10 @@ func (ser *Server) RegisterRoutes(controllers []Controller) {
 // MigrateTables will do a table table migration for all modules.
 func (ser *Server) MigrateTables() {
 	lo.Must0(ser.DB.AutoMigrate(&models.User{}))
+	lo.Must0(ser.DB.AutoMigrate(&models.Group{}))
 
+	config := models.NewModuleConfig(ser.DB)
+	config.TableMigration(ser.WG)
 	// ser.WG.Add(len(configs))
 	// for _, config := range configs {
 	// 	config.TableMigration(ser.WG)

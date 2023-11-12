@@ -10,8 +10,9 @@ import (
 func InitDB() *gorm.DB {
 	dsn := "host=localhost user=postgres password=postgres dbname=equisplit port=5432 sslmode=disable TimeZone=Asia/Kolkata"
 
-	config := &gorm.Config{}
-	config.Logger = logger.Default.LogMode(logger.Info)
+	config := &gorm.Config{
+		Logger: logger.Default.LogMode(logger.Info),
+	}
 
 	db := lo.Must(gorm.Open(postgres.Open(dsn), config))
 

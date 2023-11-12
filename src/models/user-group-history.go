@@ -8,9 +8,9 @@ import "gorm.io/gorm"
 // UserGroupHistory entity
 type UserGroupHistory struct {
 	gorm.Model
-	Payer   User    `json:"-" gorm:"foreignKey:PayerId"`
-	Payee   User    `json:"-" gorm:"foreignKey:PayeeId"`
-	Group   Group   `json:"-" gorm:"foreignKey:GroupId"`
+	Payer   User    `json:"-" gorm:"foreignKey:PayerId;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
+	Payee   User    `json:"-" gorm:"foreignKey:PayeeId;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
+	Group   Group   `json:"-" gorm:"foreignKey:GroupId;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
 	PayerId uint    `json:"payerId" gorm:"index"`
 	PayeeId uint    `json:"payeeId" gorm:"index"`
 	GroupId uint    `json:"groupId" gorm:"index"`

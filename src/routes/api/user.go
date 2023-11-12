@@ -13,6 +13,7 @@ type UserRouter interface {
 	RegisterRoutes(router *fiber.Router)
 	register(ctx *fiber.Ctx) error
 	login(c *fiber.Ctx) error
+	logout(c *fiber.Ctx) error
 }
 
 type userRouter struct {
@@ -28,8 +29,10 @@ func NewUserRouter(service controllers.UserController) UserRouter {
 func (u *userRouter) RegisterRoutes(router *fiber.Router) {
 	(*router).Post("/register", u.register)
 	(*router).Post("/login", u.login)
+	(*router).Get("/logout", u.logout)
 }
 
+// register will add user.
 func (u *userRouter) register(c *fiber.Ctx) error {
 	user := &models.User{}
 
@@ -59,11 +62,12 @@ func (u *userRouter) register(c *fiber.Ctx) error {
 		Secure:   true,
 	})
 
-	return c.Status(http.StatusOK).JSON(fiber.Map{
-		"message": "User successfully registered",
+	return c.Status(http.StatusCreated).JSON(fiber.Map{
+		"data": token,
 	})
 }
 
+// login will check user details and set the cookie
 func (u *userRouter) login(c *fiber.Ctx) error {
 	user := &models.User{}
 
@@ -81,7 +85,27 @@ func (u *userRouter) login(c *fiber.Ctx) error {
 		})
 	}
 
+	token, err := security.GenerateJWT(user)
+	if err != nil {
+		return err
+	}
+
+	c.Cookie(&fiber.Cookie{
+		Name:     "authorization",
+		Value:    token,
+		HTTPOnly: false,
+		Secure:   true,
+	})
+
 	return c.Status(http.StatusOK).JSON(fiber.Map{
-		"message": "User successfully logged in",
+		"data": token,
+	})
+}
+
+// logout will log user out from the system
+func (g *userRouter) logout(c *fiber.Ctx) error {
+
+	return c.Status(http.StatusOK).JSON(fiber.Map{
+		"message": "user successfully logged out",
 	})
 }

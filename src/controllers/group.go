@@ -5,11 +5,15 @@ import (
 
 	"github.com/shaileshhb/equisplit/src/db"
 	"github.com/shaileshhb/equisplit/src/models"
+	"github.com/shaileshhb/equisplit/src/util"
 	"gorm.io/gorm"
 )
 
 type GroupController interface {
 	CreateGroup(group *models.Group) error
+	UpdateGroup(group *models.Group) error
+	DeleteGroup(group *models.Group) error
+	GetUserGroups(group *[]models.Group, userId uint, totalCount *int64, parser *util.Parser) error
 }
 
 type groupController struct {
@@ -25,11 +29,8 @@ func NewGroupController(db *gorm.DB) GroupController {
 // CreateGroup will create new group for specified user.
 func (g *groupController) CreateGroup(group *models.Group) error {
 
-	err := g.db.Where("users.id = ?", group.CreatedBy).First(&models.User{}).Error
+	err := g.doesUserExist(group.CreatedBy)
 	if err != nil {
-		if err == gorm.ErrRecordNotFound {
-			return errors.New("user not found")
-		}
 		return err
 	}
 
@@ -63,9 +64,90 @@ func (g *groupController) CreateGroup(group *models.Group) error {
 	return nil
 }
 
+// UpdateGroup will update specified group details.
+func (g *groupController) UpdateGroup(group *models.Group) error {
+	err := g.doesGroupExist(group.ID)
+	if err != nil {
+		return err
+	}
+
+	err = g.doesUserExist(group.CreatedBy)
+	if err != nil {
+		return err
+	}
+
+	uow := db.NewUnitOfWork(g.db)
+	defer uow.RollBack()
+
+	err = uow.DB.Updates(group).Error
+	if err != nil {
+		return err
+	}
+
+	uow.Commit()
+	return nil
+}
+
+// DeleteGroup will delete specified group.
+func (g *groupController) DeleteGroup(group *models.Group) error {
+	err := g.doesGroupExist(group.ID)
+	if err != nil {
+		return err
+	}
+
+	err = g.db.
+		Where("groups.`created_by` = ? AND groups.id = ?", group.CreatedBy, group.ID).
+		First(&models.Group{}).Error
+	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return errors.New("only admin can delete this group")
+		}
+		return err
+	}
+
+	uow := db.NewUnitOfWork(g.db)
+	defer uow.RollBack()
+
+	err = uow.DB.Unscoped().Delete(&models.Group{}, group.ID).Error
+	if err != nil {
+		return err
+	}
+
+	uow.Commit()
+	return nil
+}
+
+// GetUserGroups will fetch all groups for specified userId.
+func (g *groupController) GetUserGroups(groups *[]models.Group, userId uint, totalCount *int64, parser *util.Parser) error {
+
+	err := g.doesUserExist(userId)
+	if err != nil {
+		return err
+	}
+
+	uow := db.NewUnitOfWork(g.db)
+	defer uow.RollBack()
+
+	whereDB := uow.DB.Where("groups.user_id = ?", userId)
+
+	err = whereDB.Model(&models.Group{}).Count(totalCount).Error
+	if err != nil {
+		return err
+	}
+
+	limit, offset := parser.ParseLimitAndOffset()
+
+	err = whereDB.Limit(limit).Offset(offset).Find(groups).Error
+	if err != nil {
+		return err
+	}
+
+	uow.Commit()
+	return nil
+}
+
 // getUserGroupCount will fetch count of groups created by a specific user.
 func (g *groupController) getUserGroupCount(uow *db.UnitOfWork, userId uint, totalCount *int64) error {
-
 	err := uow.DB.Model(&models.Group{}).
 		Select("COUNT(groups.id)").
 		Where("groups.created_by = ?", userId).
@@ -74,5 +156,29 @@ func (g *groupController) getUserGroupCount(uow *db.UnitOfWork, userId uint, tot
 		return err
 	}
 
+	return nil
+}
+
+// doesUserExist will check if specified user exist or not.
+func (g *groupController) doesUserExist(userId uint) error {
+	err := g.db.Where("users.id = ?", userId).First(&models.User{}).Error
+	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return errors.New("user not found")
+		}
+		return err
+	}
+	return nil
+}
+
+// doesGroupExist will check if specified group exist or not.
+func (g *groupController) doesGroupExist(groupId uint) error {
+	err := g.db.Where("groups.id = ?", groupId).First(&models.Group{}).Error
+	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return errors.New("group not found")
+		}
+		return err
+	}
 	return nil
 }

@@ -71,6 +71,8 @@ func (ser *userController) Login(user *models.User) error {
 		return errors.New("email or password did not match")
 	}
 
+	user.ID = tempUser.ID
+
 	return nil
 }
 

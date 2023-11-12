@@ -42,7 +42,9 @@ func NewServer(name string, db *gorm.DB, wg *sync.WaitGroup) *Server {
 
 // InitializeRouter Register the route.
 func (ser *Server) InitializeRouter() {
-	app := fiber.New()
+	app := fiber.New(fiber.Config{
+		AppName: ser.Name,
+	})
 
 	app.Get("/", func(c *fiber.Ctx) error {
 		// return c.SendString("Hello world!")

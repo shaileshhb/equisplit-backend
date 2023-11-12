@@ -19,7 +19,8 @@ func main() {
 
 	ser := server.NewServer("EquiSplit", database, &wg)
 	ser.CreateRouterInstance()
-	db.MigrateTables(ser)
+	// db.MigrateTables(ser)
+	ser.MigrateTables()
 	log.Fatal(ser.App.Listen(":8080"))
 
 	// Stop Server On System Call or Interrupt.

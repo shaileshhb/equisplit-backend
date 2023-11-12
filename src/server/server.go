@@ -4,6 +4,8 @@ import (
 	"sync"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/samber/lo"
+	"github.com/shaileshhb/equisplit/src/models"
 	"gorm.io/gorm"
 )
 
@@ -43,7 +45,10 @@ func (ser *Server) InitializeRouter() {
 	app := fiber.New()
 
 	app.Get("/", func(c *fiber.Ctx) error {
-		return c.SendString("Hello world!")
+		// return c.SendString("Hello world!")
+		return c.Status(200).JSON(fiber.Map{
+			"message": "Hello world!!",
+		})
 	})
 
 	apiV1 := app.Group("api/v1")
@@ -60,11 +65,13 @@ func (ser *Server) RegisterRoutes(controllers []Controller) {
 }
 
 // MigrateTables will do a table table migration for all modules.
-func (ser *Server) MigrateTables(configs []ModuleConfig) {
-	ser.WG.Add(len(configs))
-	for _, config := range configs {
-		config.TableMigration(ser.WG)
-		ser.WG.Done()
-	}
-	ser.WG.Wait()
+func (ser *Server) MigrateTables() {
+	lo.Must0(ser.DB.AutoMigrate(&models.User{}))
+
+	// ser.WG.Add(len(configs))
+	// for _, config := range configs {
+	// 	config.TableMigration(ser.WG)
+	// 	ser.WG.Done()
+	// }
+	// ser.WG.Wait()
 }

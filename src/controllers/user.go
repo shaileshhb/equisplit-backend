@@ -12,6 +12,7 @@ import (
 type UserController interface {
 	Register(user *models.User) error
 	Login(user *models.User) error
+	GetUser(user *models.User) error
 }
 
 type userController struct {
@@ -25,9 +26,9 @@ func NewUserController(db *gorm.DB) UserController {
 }
 
 // Register will register new user in the system.
-func (ser *userController) Register(user *models.User) error {
+func (u *userController) Register(user *models.User) error {
 
-	err := ser.validateUser(user)
+	err := u.validateUser(user)
 	if err != nil {
 		return err
 	}
@@ -39,7 +40,7 @@ func (ser *userController) Register(user *models.User) error {
 
 	user.Password = string(password)
 
-	uow := db.NewUnitOfWork(ser.db)
+	uow := db.NewUnitOfWork(u.db)
 	defer uow.RollBack()
 
 	err = uow.DB.Create(user).Error
@@ -52,9 +53,9 @@ func (ser *userController) Register(user *models.User) error {
 }
 
 // Login user.
-func (ser *userController) Login(user *models.User) error {
+func (u *userController) Login(user *models.User) error {
 
-	uow := db.NewUnitOfWork(ser.db)
+	uow := db.NewUnitOfWork(u.db)
 	defer uow.RollBack()
 
 	tempUser := &models.User{}
@@ -76,11 +77,22 @@ func (ser *userController) Login(user *models.User) error {
 	return nil
 }
 
+// GetUser will fetch specified user details
+func (u *userController) GetUser(user *models.User) error {
+
+	err := u.db.First(user).Error
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 // validateUer will check if it is unique user.
-func (ser *userController) validateUser(user *models.User) error {
+func (u *userController) validateUser(user *models.User) error {
 
 	var count int64 = 0
-	err := ser.db.Model(&models.User{}).
+	err := u.db.Model(&models.User{}).
 		Select("COUNT(DISTINCT(id))").
 		Where("users.id != ? AND users.email = ?", user.ID, user.Email).
 		Unscoped().

@@ -2,6 +2,7 @@ package api
 
 import (
 	"net/http"
+	"strconv"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/shaileshhb/equisplit/src/controllers"
@@ -14,6 +15,7 @@ type UserRouter interface {
 	register(ctx *fiber.Ctx) error
 	login(c *fiber.Ctx) error
 	logout(c *fiber.Ctx) error
+	getUser(c *fiber.Ctx) error
 }
 
 type userRouter struct {
@@ -30,6 +32,7 @@ func (u *userRouter) RegisterRoutes(router *fiber.Router) {
 	(*router).Post("/register", u.register)
 	(*router).Post("/login", u.login)
 	(*router).Get("/logout", u.logout)
+	(*router).Get("/user/:userId<int>", u.getUser)
 }
 
 // register will add user.
@@ -62,8 +65,15 @@ func (u *userRouter) register(c *fiber.Ctx) error {
 		Secure:   true,
 	})
 
+	userResponse := map[string]interface{}{
+		"userId": user.ID,
+		"token":  token,
+		"name":   user.Name,
+		"email":  user.Email,
+	}
+
 	return c.Status(http.StatusCreated).JSON(fiber.Map{
-		"data": token,
+		"data": userResponse,
 	})
 }
 
@@ -99,6 +109,31 @@ func (u *userRouter) login(c *fiber.Ctx) error {
 
 	return c.Status(http.StatusOK).JSON(fiber.Map{
 		"data": token,
+	})
+}
+
+// getUser will fetch specified user details.
+func (u *userRouter) getUser(c *fiber.Ctx) error {
+	user := models.User{}
+
+	userId, err := strconv.Atoi(c.Params("userId"))
+	if err != nil {
+		return c.Status(http.StatusBadRequest).JSON(fiber.Map{
+			"error": err.Error(),
+		})
+	}
+
+	user.ID = uint(userId)
+
+	err = u.con.GetUser(&user)
+	if err != nil {
+		return c.Status(http.StatusBadRequest).JSON(fiber.Map{
+			"error": err.Error(),
+		})
+	}
+
+	return c.Status(http.StatusCreated).JSON(fiber.Map{
+		"data": user,
 	})
 }
 

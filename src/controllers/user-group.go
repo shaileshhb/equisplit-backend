@@ -12,7 +12,8 @@ import (
 type UserGroupController interface {
 	AddUserToGroup(userGroup *models.UserGroup) error
 	DeleteUserFromGroup(userGroup *models.UserGroup) error
-	GetGroupDetails(userGroups *[]models.UserGroup, groupId uint) error
+	GetGroupDetails(userGroups *[]models.UserGroupDTO, groupId uint) error
+	GetUserGroups(userGroups *[]models.UserGroupDTO, userId uint) error
 }
 
 type userGroupController struct {
@@ -101,7 +102,7 @@ func (u *userGroupController) DeleteUserFromGroup(userGroup *models.UserGroup) e
 }
 
 // GetGroupDetails will fetch all user details of specified group.
-func (u *userGroupController) GetGroupDetails(userGroups *[]models.UserGroup, groupId uint) error {
+func (u *userGroupController) GetGroupDetails(userGroups *[]models.UserGroupDTO, groupId uint) error {
 
 	err := u.doesGroupExist(groupId)
 	if err != nil {
@@ -113,6 +114,26 @@ func (u *userGroupController) GetGroupDetails(userGroups *[]models.UserGroup, gr
 
 	err = uow.DB.Where("user_groups.group_id = ?", groupId).
 		Preload("User").Find(userGroups).Error
+	if err != nil {
+		return err
+	}
+
+	uow.Commit()
+	return nil
+}
+
+// GetUserGroups will fetch all groups for specific user.
+func (u *userGroupController) GetUserGroups(userGroups *[]models.UserGroupDTO, userId uint) error {
+
+	err := u.doesUserExist(userId)
+	if err != nil {
+		return err
+	}
+
+	uow := db.NewUnitOfWork(u.db)
+	defer uow.RollBack()
+
+	err = uow.DB.Where("user_groups.user_id = ?", userId).Preload("Group").Find(userGroups).Error
 	if err != nil {
 		return err
 	}

@@ -16,3 +16,18 @@ type UserGroup struct {
 func (*UserGroup) TableName() string {
 	return "user_groups"
 }
+
+// UserGroup entity
+type UserGroupDTO struct {
+	gorm.Model
+	User           *User   `json:"user"`
+	Group          *Group  `json:"group"`
+	UserId         uint    `json:"userId"`
+	GroupId        uint    `json:"groupId"`
+	OutgoingAmount float64 `json:"outgoingAmount"`
+	IncomingAmount float64 `json:"incomingAmount"`
+}
+
+func (*UserGroupDTO) TableName() string {
+	return "user_groups"
+}

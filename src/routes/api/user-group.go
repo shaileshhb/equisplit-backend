@@ -14,6 +14,7 @@ type UserGroupRouter interface {
 	addUserToGroup(c *fiber.Ctx) error
 	deleteUserFromGroup(c *fiber.Ctx) error
 	getGroupDetails(c *fiber.Ctx) error
+	getUserGroups(c *fiber.Ctx) error
 }
 
 type userGroupRouter struct {
@@ -29,6 +30,7 @@ func NewUserGroupRouter(con controllers.UserGroupController) UserGroupRouter {
 // RegisterRoutes will register routes for user-group router.
 func (u *userGroupRouter) RegisterRoutes(router *fiber.Router) {
 	(*router).Get("/group/:groupId<int>/user", u.getGroupDetails)
+	(*router).Get("/user/:userId<int>/group", u.getUserGroups)
 	(*router).Post("/group/:groupId<int>/user", u.addUserToGroup)
 	(*router).Post("/group/:groupId<int>/user/:userGroupId", u.deleteUserFromGroup)
 }
@@ -88,7 +90,7 @@ func (u *userGroupRouter) deleteUserFromGroup(c *fiber.Ctx) error {
 
 // getGroupDetails will fetch all user details from specified group
 func (u *userGroupRouter) getGroupDetails(c *fiber.Ctx) error {
-	userGroups := []models.UserGroup{}
+	userGroups := []models.UserGroupDTO{}
 
 	groupId, err := strconv.Atoi(c.Params("groupId"))
 	if err != nil {
@@ -98,6 +100,29 @@ func (u *userGroupRouter) getGroupDetails(c *fiber.Ctx) error {
 	}
 
 	err = u.con.GetGroupDetails(&userGroups, uint(groupId))
+	if err != nil {
+		return c.Status(http.StatusBadRequest).JSON(fiber.Map{
+			"error": err.Error(),
+		})
+	}
+
+	return c.Status(http.StatusCreated).JSON(fiber.Map{
+		"data": userGroups,
+	})
+}
+
+// getUserGroups will fetch all groups for specified user
+func (u *userGroupRouter) getUserGroups(c *fiber.Ctx) error {
+	userGroups := []models.UserGroupDTO{}
+
+	userId, err := strconv.Atoi(c.Params("userId"))
+	if err != nil {
+		return c.Status(http.StatusBadRequest).JSON(fiber.Map{
+			"error": err.Error(),
+		})
+	}
+
+	err = u.con.GetUserGroups(&userGroups, uint(userId))
 	if err != nil {
 		return c.Status(http.StatusBadRequest).JSON(fiber.Map{
 			"error": err.Error(),

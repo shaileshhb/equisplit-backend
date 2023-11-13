@@ -48,7 +48,7 @@ func (u *userController) Register(user *models.User) error {
 		return err
 	}
 
-	// uow.Commit()
+	uow.Commit()
 	return nil
 }
 
@@ -73,6 +73,7 @@ func (u *userController) Login(user *models.User) error {
 	}
 
 	user.ID = tempUser.ID
+	user.Name = tempUser.Name
 
 	return nil
 }

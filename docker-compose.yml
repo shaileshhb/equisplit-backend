@@ -23,7 +23,7 @@ services:
   equisplit:
     container_name: equisplit
     build:
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.dev
     ports:
       - "8080:8080"
     expose:

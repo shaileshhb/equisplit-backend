@@ -19,13 +19,13 @@ type GroupRouter interface {
 }
 
 type groupRouter struct {
-	controller controllers.GroupController
+	con controllers.GroupController
 }
 
 // NewGroupRouter will create new instance of GroupRouter.
-func NewGroupRouter(controller controllers.GroupController) GroupRouter {
+func NewGroupRouter(con controllers.GroupController) GroupRouter {
 	return &groupRouter{
-		controller: controller,
+		con: con,
 	}
 }
 
@@ -57,7 +57,7 @@ func (g *groupRouter) createGroup(c *fiber.Ctx) error {
 
 	group.CreatedBy = uint(id)
 
-	err = g.controller.CreateGroup(group)
+	err = g.con.CreateGroup(group)
 	if err != nil {
 		return c.Status(http.StatusBadRequest).JSON(fiber.Map{
 			"error": err.Error(),
@@ -96,7 +96,7 @@ func (g *groupRouter) updateGroup(c *fiber.Ctx) error {
 
 	group.ID = uint(id)
 
-	err = g.controller.CreateGroup(group)
+	err = g.con.CreateGroup(group)
 	if err != nil {
 		return c.Status(http.StatusBadRequest).JSON(fiber.Map{
 			"error": err.Error(),
@@ -128,7 +128,7 @@ func (g *groupRouter) deleteGroup(c *fiber.Ctx) error {
 
 	group.ID = uint(id)
 
-	err = g.controller.DeleteGroup(group)
+	err = g.con.DeleteGroup(group)
 	if err != nil {
 		return c.Status(http.StatusBadRequest).JSON(fiber.Map{
 			"error": err.Error(),
@@ -152,7 +152,7 @@ func (g *groupRouter) getUserGroups(c *fiber.Ctx) error {
 
 	var totalCount int64
 
-	err = g.controller.GetUserGroups(group, uint(id), &totalCount, parser)
+	err = g.con.GetUserGroups(group, uint(id), &totalCount, parser)
 	if err != nil {
 		return c.Status(http.StatusBadRequest).JSON(fiber.Map{
 			"error": err.Error(),

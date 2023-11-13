@@ -17,12 +17,12 @@ type UserRouter interface {
 }
 
 type userRouter struct {
-	service controllers.UserController
+	con controllers.UserController
 }
 
-func NewUserRouter(service controllers.UserController) UserRouter {
+func NewUserRouter(con controllers.UserController) UserRouter {
 	return &userRouter{
-		service: service,
+		con: con,
 	}
 }
 
@@ -43,7 +43,7 @@ func (u *userRouter) register(c *fiber.Ctx) error {
 		})
 	}
 
-	err = u.service.Register(user)
+	err = u.con.Register(user)
 	if err != nil {
 		return c.Status(http.StatusBadRequest).JSON(fiber.Map{
 			"error": err.Error(),
@@ -78,7 +78,7 @@ func (u *userRouter) login(c *fiber.Ctx) error {
 		})
 	}
 
-	err = u.service.Login(user)
+	err = u.con.Login(user)
 	if err != nil {
 		return c.Status(http.StatusBadRequest).JSON(fiber.Map{
 			"error": err.Error(),

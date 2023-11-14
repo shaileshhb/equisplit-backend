@@ -12,7 +12,7 @@ import (
 )
 
 type UserRouter interface {
-	RegisterRoutes(router *fiber.Router)
+	RegisterRoutes(router fiber.Router)
 	register(ctx *fiber.Ctx) error
 	login(c *fiber.Ctx) error
 	logout(c *fiber.Ctx) error
@@ -24,18 +24,20 @@ type userRouter struct {
 	con controllers.UserController
 }
 
+// NewUserRouter will create new instance for UserRouter
 func NewUserRouter(con controllers.UserController) UserRouter {
 	return &userRouter{
 		con: con,
 	}
 }
 
-func (u *userRouter) RegisterRoutes(router *fiber.Router) {
-	(*router).Post("/register", u.register)
-	(*router).Post("/login", u.login)
-	(*router).Get("/logout", u.logout)
-	(*router).Get("/user/:userId<int>", u.getUser)
-	(*router).Get("/user", u.getUsers)
+// RegisterRoutes will register user routes.
+func (u *userRouter) RegisterRoutes(router fiber.Router) {
+	router.Post("/register", u.register)
+	router.Post("/login", u.login)
+	router.Get("/logout", u.logout)
+	router.Get("/user/:userId<int>", security.MandatoryAuthMiddleware, u.getUser)
+	router.Get("/user", security.MandatoryAuthMiddleware, u.getUsers)
 }
 
 // register will add user.

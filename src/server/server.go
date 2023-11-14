@@ -11,7 +11,7 @@ import (
 
 // Controller is implemented by the controllers.
 type Controller interface {
-	RegisterRoutes(router *fiber.Router)
+	RegisterRoutes(router fiber.Router)
 }
 
 // ModuleConfig needs to be implemented by every module.
@@ -61,7 +61,7 @@ func (ser *Server) InitializeRouter() {
 // RegisterRoutes will register the specified routes in controllers.
 func (ser *Server) RegisterRoutes(controllers []Controller) {
 	for _, controller := range controllers {
-		controller.RegisterRoutes(ser.Router)
+		controller.RegisterRoutes(*ser.Router)
 	}
 }
 

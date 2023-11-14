@@ -7,11 +7,12 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/shaileshhb/equisplit/src/controllers"
 	"github.com/shaileshhb/equisplit/src/models"
+	"github.com/shaileshhb/equisplit/src/security"
 	"github.com/shaileshhb/equisplit/src/util"
 )
 
 type GroupRouter interface {
-	RegisterRoutes(router *fiber.Router)
+	RegisterRoutes(router fiber.Router)
 	createGroup(c *fiber.Ctx) error
 	updateGroup(c *fiber.Ctx) error
 	deleteGroup(c *fiber.Ctx) error
@@ -30,11 +31,11 @@ func NewGroupRouter(con controllers.GroupController) GroupRouter {
 }
 
 // RegisterRoutes will register routes for group.
-func (g *groupRouter) RegisterRoutes(router *fiber.Router) {
-	(*router).Get("/:userId<int>/group", g.getUserGroups)
-	(*router).Post("/:userId<int>/group", g.createGroup)
-	(*router).Put("/:userId<int>/group/:groupId<int>", g.updateGroup)
-	(*router).Delete("/:userId<int>/group/:groupId<int>", g.deleteGroup)
+func (g *groupRouter) RegisterRoutes(router fiber.Router) {
+	router.Get("/:userId<int>/group", security.MandatoryAuthMiddleware, g.getUserGroups)
+	router.Post("/:userId<int>/group", security.MandatoryAuthMiddleware, g.createGroup)
+	router.Put("/:userId<int>/group/:groupId<int>", security.MandatoryAuthMiddleware, g.updateGroup)
+	router.Delete("/:userId<int>/group/:groupId<int>", security.MandatoryAuthMiddleware, g.deleteGroup)
 }
 
 // createGroup will create new group for specified user.

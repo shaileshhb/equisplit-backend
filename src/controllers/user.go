@@ -6,6 +6,7 @@ import (
 	"github.com/shaileshhb/equisplit/src/db"
 	"github.com/shaileshhb/equisplit/src/models"
 	"github.com/shaileshhb/equisplit/src/security"
+	"github.com/shaileshhb/equisplit/src/util"
 	"gorm.io/gorm"
 )
 
@@ -13,6 +14,7 @@ type UserController interface {
 	Register(user *models.User) error
 	Login(user *models.User) error
 	GetUser(user *models.UserDTO) error
+	GetUsers(users *[]models.UserDTO, parser *util.Parser) error
 }
 
 type userController struct {
@@ -89,6 +91,23 @@ func (u *userController) GetUser(user *models.UserDTO) error {
 	return nil
 }
 
+// GetUsers will fetch all users
+func (u *userController) GetUsers(users *[]models.UserDTO, parser *util.Parser) error {
+
+	uow := db.NewUnitOfWork(u.db)
+	defer uow.RollBack()
+
+	queryDB := u.searchQuery(uow, parser)
+
+	err := queryDB.Find(users).Error
+	if err != nil {
+		return err
+	}
+
+	uow.Commit()
+	return nil
+}
+
 // validateUer will check if it is unique user.
 func (u *userController) validateUser(user *models.User) error {
 
@@ -107,4 +126,18 @@ func (u *userController) validateUser(user *models.User) error {
 	}
 
 	return nil
+}
+
+func (u *userController) searchQuery(uow *db.UnitOfWork, parser *util.Parser) *gorm.DB {
+	queryDB := uow.DB
+
+	if len(parser.GetQuery("email")) > 0 {
+		queryDB = uow.DB.Where("users.email LIKE ?", parser.GetQuery("email")+"%")
+	}
+
+	if len(parser.GetQuery("name")) > 0 {
+		queryDB = uow.DB.Where("users.name LIKE ?", "%"+parser.GetQuery("name")+"%")
+	}
+
+	return queryDB
 }

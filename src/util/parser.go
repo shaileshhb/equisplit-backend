@@ -27,6 +27,11 @@ func (p *Parser) GetParameter(paramName string) string {
 	return p.ctx.Params(paramName, "")
 }
 
+// GetQuery will get queryparams from the given paramName in URL queryparams.
+func (p *Parser) GetQuery(paramName string) string {
+	return p.ctx.Query(paramName, "")
+}
+
 // ParseLimitAndOffset will parse limit and offset from query params.
 func (p *Parser) ParseLimitAndOffset() (limit, offset int) {
 	limitparam := p.ctx.Query("limit", "10")

@@ -8,6 +8,7 @@ import (
 	"github.com/shaileshhb/equisplit/src/controllers"
 	"github.com/shaileshhb/equisplit/src/models"
 	"github.com/shaileshhb/equisplit/src/security"
+	"github.com/shaileshhb/equisplit/src/util"
 )
 
 type UserRouter interface {
@@ -16,6 +17,7 @@ type UserRouter interface {
 	login(c *fiber.Ctx) error
 	logout(c *fiber.Ctx) error
 	getUser(c *fiber.Ctx) error
+	getUsers(c *fiber.Ctx) error
 }
 
 type userRouter struct {
@@ -33,6 +35,7 @@ func (u *userRouter) RegisterRoutes(router *fiber.Router) {
 	(*router).Post("/login", u.login)
 	(*router).Get("/logout", u.logout)
 	(*router).Get("/user/:userId<int>", u.getUser)
+	(*router).Get("/user", u.getUsers)
 }
 
 // register will add user.
@@ -144,4 +147,19 @@ func (g *userRouter) logout(c *fiber.Ctx) error {
 	return c.Status(http.StatusOK).JSON(fiber.Map{
 		"message": "user successfully logged out",
 	})
+}
+
+// getUsers will fetch specified user details.
+func (u *userRouter) getUsers(c *fiber.Ctx) error {
+	users := []models.UserDTO{}
+	parser := util.NewParser(c)
+
+	err := u.con.GetUsers(&users, parser)
+	if err != nil {
+		return c.Status(http.StatusBadRequest).JSON(fiber.Map{
+			"error": err.Error(),
+		})
+	}
+
+	return c.Status(http.StatusOK).JSON(users)
 }

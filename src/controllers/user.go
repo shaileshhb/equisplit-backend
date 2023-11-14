@@ -12,7 +12,7 @@ import (
 type UserController interface {
 	Register(user *models.User) error
 	Login(user *models.User) error
-	GetUser(user *models.User) error
+	GetUser(user *models.UserDTO) error
 }
 
 type userController struct {
@@ -79,7 +79,7 @@ func (u *userController) Login(user *models.User) error {
 }
 
 // GetUser will fetch specified user details
-func (u *userController) GetUser(user *models.User) error {
+func (u *userController) GetUser(user *models.UserDTO) error {
 
 	err := u.db.First(user).Error
 	if err != nil {

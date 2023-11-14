@@ -1,7 +1,6 @@
 package api
 
 import (
-	"encoding/json"
 	"net/http"
 	"strconv"
 
@@ -73,17 +72,7 @@ func (u *userRouter) register(c *fiber.Ctx) error {
 		"email":  user.Email,
 	}
 
-	// return c.Status(http.StatusCreated).JSON(fiber.Map{
-	// 	"data": userResponse,
-	// })
-	response, err := json.Marshal(userResponse)
-	if err != nil {
-		return c.Status(http.StatusBadRequest).JSON(fiber.Map{
-			"error": err.Error(),
-		})
-	}
-
-	return c.Status(http.StatusCreated).Send([]byte(response))
+	return c.Status(http.StatusCreated).JSON(userResponse)
 }
 
 // login will check user details and set the cookie
@@ -123,19 +112,12 @@ func (u *userRouter) login(c *fiber.Ctx) error {
 		"email":  user.Email,
 	}
 
-	response, err := json.Marshal(userResponse)
-	if err != nil {
-		return c.Status(http.StatusBadRequest).JSON(fiber.Map{
-			"error": err.Error(),
-		})
-	}
-
-	return c.Status(http.StatusOK).Send([]byte(response))
+	return c.Status(http.StatusOK).JSON(userResponse)
 }
 
 // getUser will fetch specified user details.
 func (u *userRouter) getUser(c *fiber.Ctx) error {
-	user := models.User{}
+	user := models.UserDTO{}
 
 	userId, err := strconv.Atoi(c.Params("userId"))
 	if err != nil {
@@ -153,9 +135,7 @@ func (u *userRouter) getUser(c *fiber.Ctx) error {
 		})
 	}
 
-	return c.Status(http.StatusCreated).JSON(fiber.Map{
-		"data": user,
-	})
+	return c.Status(http.StatusOK).JSON(user)
 }
 
 // logout will log user out from the system

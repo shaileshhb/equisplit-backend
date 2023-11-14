@@ -128,7 +128,7 @@ func (g *groupController) GetUserGroups(groups *[]models.Group, userId uint, tot
 	uow := db.NewUnitOfWork(g.db)
 	defer uow.RollBack()
 
-	whereDB := uow.DB.Where("groups.user_id = ?", userId)
+	whereDB := uow.DB.Where("groups.created_by = ?", userId)
 
 	err = whereDB.Model(&models.Group{}).Count(totalCount).Error
 	if err != nil {

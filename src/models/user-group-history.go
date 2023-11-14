@@ -1,13 +1,11 @@
 package models
 
-import "gorm.io/gorm"
-
 // Payer - Represents the user who has to transfer some amount.
 // Payee - Represents the user to whom the amount should be transferred.
 
 // UserGroupHistory entity
 type UserGroupHistory struct {
-	gorm.Model
+	Base
 	Payer   User    `json:"-" gorm:"foreignKey:PayerId;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
 	Payee   User    `json:"-" gorm:"foreignKey:PayeeId;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
 	Group   Group   `json:"-" gorm:"foreignKey:GroupId;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`

@@ -47,7 +47,6 @@ func (ser *Server) InitializeRouter() {
 	})
 
 	app.Get("/", func(c *fiber.Ctx) error {
-		// return c.SendString("Hello world!")
 		return c.Status(200).JSON(fiber.Map{
 			"message": "Hello world!!",
 		})

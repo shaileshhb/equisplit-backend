@@ -7,7 +7,6 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/samber/lo"
 	"github.com/shaileshhb/equisplit/src/models"
-	"gorm.io/gorm"
 )
 
 var JWT_KEY = "this is a sample key, should change in prod"
@@ -35,7 +34,7 @@ func ValidateJWT(t string) (*models.User, error) {
 		return nil, jwt.ErrTokenExpired
 	}
 	return &models.User{
-		Model: gorm.Model{
+		Base: models.Base{
 			ID: sub,
 		},
 	}, nil

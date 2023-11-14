@@ -1,10 +1,8 @@
 package models
 
-import "gorm.io/gorm"
-
 // UserGroup entity
 type UserGroup struct {
-	gorm.Model
+	Base
 	User           User    `json:"-" gorm:"foreignKey:UserId;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
 	Group          Group   `json:"-" gorm:"foreignKey:GroupId;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
 	UserId         uint    `json:"userId" gorm:"index"`
@@ -19,7 +17,7 @@ func (*UserGroup) TableName() string {
 
 // UserGroup entity
 type UserGroupDTO struct {
-	gorm.Model
+	BaseDTO
 	User           *User   `json:"user"`
 	Group          *Group  `json:"group"`
 	UserId         uint    `json:"userId"`

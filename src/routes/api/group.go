@@ -64,7 +64,7 @@ func (g *groupRouter) createGroup(c *fiber.Ctx) error {
 		})
 	}
 
-	return c.Status(http.StatusCreated).JSON(fiber.Map{})
+	return c.Status(http.StatusCreated).JSON(nil)
 }
 
 // updateGroup will update group for specified user.
@@ -103,7 +103,7 @@ func (g *groupRouter) updateGroup(c *fiber.Ctx) error {
 		})
 	}
 
-	return c.Status(http.StatusAccepted).JSON(fiber.Map{})
+	return c.Status(http.StatusAccepted).JSON(nil)
 }
 
 // deleteGroup will delete group for specified user.
@@ -135,7 +135,7 @@ func (g *groupRouter) deleteGroup(c *fiber.Ctx) error {
 		})
 	}
 
-	return c.Status(http.StatusAccepted).JSON(fiber.Map{})
+	return c.Status(http.StatusAccepted).JSON(nil)
 }
 
 // deleteGroup will delete group for specified user.
@@ -161,7 +161,5 @@ func (g *groupRouter) getUserGroups(c *fiber.Ctx) error {
 
 	c.Response().Header.Add("X-Total-Count", strconv.Itoa(int(totalCount)))
 
-	return c.Status(http.StatusAccepted).JSON(fiber.Map{
-		"data": group,
-	})
+	return c.Status(http.StatusOK).JSON(group)
 }

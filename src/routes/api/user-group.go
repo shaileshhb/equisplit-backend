@@ -129,7 +129,5 @@ func (u *userGroupRouter) getUserGroups(c *fiber.Ctx) error {
 		})
 	}
 
-	return c.Status(http.StatusCreated).JSON(fiber.Map{
-		"data": userGroups,
-	})
+	return c.Status(http.StatusOK).JSON(userGroups)
 }

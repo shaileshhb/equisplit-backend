@@ -18,7 +18,7 @@ func (*UserGroup) TableName() string {
 // UserGroup entity
 type UserGroupDTO struct {
 	BaseDTO
-	User           *User         `json:"user"`
+	User           *UserDTO      `json:"user"`
 	Group          *Group        `json:"group"`
 	UserId         uint          `json:"userId"`
 	GroupId        uint          `json:"groupId"`

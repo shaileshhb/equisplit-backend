@@ -12,6 +12,7 @@ import (
 // GroupTransactionController will contain all methods to be implemented by userGroupHistory controller
 type GroupTransactionController interface {
 	Add(transaction *models.GroupTransaction) error
+	MarkTransactionPaid(transaction *models.GroupTransaction, payerId uint) error
 	Delete(userId, transactionId uint) error
 }
 
@@ -66,6 +67,35 @@ func (g *groupTransactionController) Add(transaction *models.GroupTransaction) e
 	return nil
 }
 
+// MarkTransactionPaid will mark the transaction has paid
+func (g *groupTransactionController) MarkTransactionPaid(transaction *models.GroupTransaction, payerId uint) error {
+
+	err := g.doesGroupTransactionExist(transaction.ID)
+	if err != nil {
+		return err
+	}
+
+	uow := db.NewUnitOfWork(g.db)
+	defer uow.RollBack()
+
+	err = uow.DB.Where("id = ? AND payer_id = ?", transaction.ID, payerId).
+		First(&models.GroupTransaction{}).Error
+	if err != nil {
+		return err
+	}
+
+	err = uow.DB.Model(&models.GroupTransaction{}).Where("group_transactions.id = ?", transaction.ID).
+		Updates(map[string]interface{}{
+			"IsPaid": true,
+		}).Error
+	if err != nil {
+		return err
+	}
+
+	uow.Commit()
+	return nil
+}
+
 // Delete will delete specified transaction
 func (g *groupTransactionController) Delete(userId, transactionId uint) error {
 
@@ -82,7 +112,7 @@ func (g *groupTransactionController) Delete(userId, transactionId uint) error {
 	uow := db.NewUnitOfWork(g.db)
 	defer uow.RollBack()
 
-	err = uow.DB.Where("group_transactions.id = ? AND group_transactions.payee_id = ?", transactionId, userId).
+	err = uow.DB.Model(&models.GroupTransaction{}).Where("group_transactions.id = ? AND group_transactions.payee_id = ?", transactionId, userId).
 		First(&models.GroupTransaction{}).Error
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {

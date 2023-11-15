@@ -36,7 +36,7 @@ func NewUserGroupRouter(con controllers.UserGroupController, auth security.Authe
 
 // RegisterRoutes will register routes for user-group router.
 func (u *userGroupRouter) RegisterRoutes(router fiber.Router) {
-	router.Get("/group/:groupId<int>/user", u.auth.MandatoryAuthMiddleware, u.getGroupDetails)
+	router.Get("/group/:groupId<int>", u.auth.MandatoryAuthMiddleware, u.getGroupDetails)
 	router.Get("/user/:userId<int>/group", u.auth.MandatoryAuthMiddleware, u.getUserGroups)
 	router.Post("/group/:groupId<int>/user", u.auth.MandatoryAuthMiddleware, u.addUserToGroup)
 	router.Delete("/group/:groupId<int>/user/:userGroupId", u.auth.MandatoryAuthMiddleware, u.deleteUserFromGroup)
@@ -113,7 +113,10 @@ func (u *userGroupRouter) getGroupDetails(c *fiber.Ctx) error {
 		})
 	}
 
-	err = u.con.GetGroupDetails(&userGroups, uint(groupId))
+	userInterface := c.Locals("user")
+	user := userInterface.(*models.User)
+
+	err = u.con.GetGroupDetails(&userGroups, uint(groupId), user.ID)
 	if err != nil {
 		u.log.Error().Err(err).Msg("")
 		return c.Status(http.StatusBadRequest).JSON(fiber.Map{

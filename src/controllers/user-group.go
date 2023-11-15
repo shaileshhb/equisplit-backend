@@ -12,7 +12,7 @@ import (
 type UserGroupController interface {
 	AddUserToGroup(userGroup *models.UserGroup) error
 	DeleteUserFromGroup(userGroup *models.UserGroup) error
-	GetGroupDetails(userGroups *[]models.UserGroupDTO, groupId uint) error
+	GetGroupDetails(userGroups *[]models.UserGroupDTO, groupId, userId uint) error
 	GetUserGroups(userGroups *[]models.UserGroupDTO, userId uint) error
 }
 
@@ -75,7 +75,7 @@ func (u *userGroupController) DeleteUserFromGroup(userGroup *models.UserGroup) e
 	uow := db.NewUnitOfWork(u.db)
 	defer uow.RollBack()
 
-	err = uow.DB.Where("user_groups.user_id = ? AND user_groups.group_id = ?", userGroup.UserId, userGroup.GroupId).
+	err = uow.DB.Model(&models.UserGroup{}).Where("user_groups.user_id = ? AND user_groups.group_id = ?", userGroup.UserId, userGroup.GroupId).
 		Updates(map[string]interface{}{
 			"DeletedAt": time.Now(),
 		}).Error
@@ -88,7 +88,7 @@ func (u *userGroupController) DeleteUserFromGroup(userGroup *models.UserGroup) e
 }
 
 // GetGroupDetails will fetch all user details of specified group.
-func (u *userGroupController) GetGroupDetails(userGroups *[]models.UserGroupDTO, groupId uint) error {
+func (u *userGroupController) GetGroupDetails(userGroups *[]models.UserGroupDTO, groupId, userId uint) error {
 
 	err := u.doesGroupExist(groupId)
 	if err != nil {
@@ -102,6 +102,31 @@ func (u *userGroupController) GetGroupDetails(userGroups *[]models.UserGroupDTO,
 		Preload("User").Find(userGroups).Error
 	if err != nil {
 		return err
+	}
+
+	for index := range *userGroups {
+		(*userGroups)[index].Summary = &models.GroupSummary{
+			UserId: (*userGroups)[index].UserId,
+		}
+		if userId == (*userGroups)[index].UserId {
+			continue
+		}
+
+		err = uow.DB.Select("SUM(amount) AS incoming_amount").Table("group_transactions").
+			Where("group_id = ? AND payer_id = ? AND payee_id = ? AND is_paid = ?",
+				(*userGroups)[index].GroupId, (*userGroups)[index].UserId, userId, false).
+			Scan(&(*userGroups)[index].Summary).Error
+		if err != nil {
+			return err
+		}
+
+		err = uow.DB.Select("SUM(amount) AS outgoing_amount").Table("group_transactions").
+			Where("group_id = ? AND payee_id = ? AND payer_id = ? AND is_paid = ?",
+				(*userGroups)[index].GroupId, (*userGroups)[index].UserId, userId, false).
+			Scan(&(*userGroups)[index].Summary).Error
+		if err != nil {
+			return err
+		}
 	}
 
 	uow.Commit()
@@ -126,14 +151,16 @@ func (u *userGroupController) GetUserGroups(userGroups *[]models.UserGroupDTO, u
 
 	for index := range *userGroups {
 		err = uow.DB.Select("SUM(amount) AS outgoing_amount").Table("group_transactions").
-			Where("group_transactions.group_id = ? AND group_transactions.payer_id = ?", (*userGroups)[index].GroupId, userId).
+			Where("group_transactions.group_id = ? AND group_transactions.payer_id = ? AND is_paid = ?",
+				(*userGroups)[index].GroupId, userId, false).
 			Scan(&(*userGroups)[index].Summary).Error
 		if err != nil {
 			return err
 		}
 
 		err = uow.DB.Select("SUM(amount) AS incoming_amount").Table("group_transactions").
-			Where("group_transactions.group_id = ? AND group_transactions.payee_id = ?", (*userGroups)[index].GroupId, userId).
+			Where("group_transactions.group_id = ? AND group_transactions.payee_id = ? AND is_paid = ?",
+				(*userGroups)[index].GroupId, userId, false).
 			Scan(&(*userGroups)[index].Summary).Error
 		if err != nil {
 			return err

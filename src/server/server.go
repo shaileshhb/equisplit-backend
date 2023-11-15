@@ -4,8 +4,10 @@ import (
 	"sync"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/rs/zerolog"
 	"github.com/samber/lo"
 	"github.com/shaileshhb/equisplit/src/models"
+	"github.com/shaileshhb/equisplit/src/security"
 	"gorm.io/gorm"
 )
 
@@ -26,16 +28,18 @@ type Server struct {
 	App    *fiber.App
 	Router *fiber.Router
 	WG     *sync.WaitGroup
-	// Log    log.Logger
+	Log    zerolog.Logger
+	Auth   security.Authentication
 	// Config config.ConfReader
 }
 
-func NewServer(name string, db *gorm.DB, wg *sync.WaitGroup) *Server {
+func NewServer(name string, db *gorm.DB, log zerolog.Logger, auth security.Authentication, wg *sync.WaitGroup) *Server {
 	return &Server{
 		Name: name,
 		DB:   db,
 		WG:   wg,
-		// Log:  log,
+		Auth: auth,
+		Log:  log,
 		// Config:         conf,
 	}
 }
@@ -45,6 +49,8 @@ func (ser *Server) InitializeRouter() {
 	app := fiber.New(fiber.Config{
 		AppName: ser.Name,
 	})
+
+	app.Use(ser.Auth.HttpLogger)
 
 	app.Get("/", func(c *fiber.Ctx) error {
 		return c.Status(200).JSON(fiber.Map{

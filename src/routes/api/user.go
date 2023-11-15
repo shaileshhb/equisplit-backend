@@ -5,6 +5,7 @@ import (
 	"strconv"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/rs/zerolog"
 	"github.com/shaileshhb/equisplit/src/controllers"
 	"github.com/shaileshhb/equisplit/src/models"
 	"github.com/shaileshhb/equisplit/src/security"
@@ -21,13 +22,17 @@ type UserRouter interface {
 }
 
 type userRouter struct {
-	con controllers.UserController
+	con  controllers.UserController
+	auth security.Authentication
+	log  zerolog.Logger
 }
 
 // NewUserRouter will create new instance for UserRouter
-func NewUserRouter(con controllers.UserController) UserRouter {
+func NewUserRouter(con controllers.UserController, auth security.Authentication, log zerolog.Logger) UserRouter {
 	return &userRouter{
-		con: con,
+		con:  con,
+		auth: auth,
+		log:  log,
 	}
 }
 
@@ -36,8 +41,8 @@ func (u *userRouter) RegisterRoutes(router fiber.Router) {
 	router.Post("/register", u.register)
 	router.Post("/login", u.login)
 	router.Get("/logout", u.logout)
-	router.Get("/user/:userId<int>", security.MandatoryAuthMiddleware, u.getUser)
-	router.Get("/user", security.MandatoryAuthMiddleware, u.getUsers)
+	router.Get("/user/:userId<int>", u.auth.MandatoryAuthMiddleware, u.getUser)
+	router.Get("/user", u.auth.MandatoryAuthMiddleware, u.getUsers)
 }
 
 // register will add user.
@@ -46,6 +51,7 @@ func (u *userRouter) register(c *fiber.Ctx) error {
 
 	err := c.BodyParser(user)
 	if err != nil {
+		u.log.Error().Err(err).Msg("")
 		return c.Status(http.StatusBadRequest).JSON(fiber.Map{
 			"error": err.Error(),
 		})
@@ -53,6 +59,7 @@ func (u *userRouter) register(c *fiber.Ctx) error {
 
 	err = u.con.Register(user)
 	if err != nil {
+		u.log.Error().Err(err).Msg("")
 		return c.Status(http.StatusBadRequest).JSON(fiber.Map{
 			"error": err.Error(),
 		})
@@ -60,7 +67,10 @@ func (u *userRouter) register(c *fiber.Ctx) error {
 
 	token, err := security.GenerateJWT(user)
 	if err != nil {
-		return err
+		u.log.Error().Err(err).Msg("")
+		return c.Status(http.StatusBadRequest).JSON(fiber.Map{
+			"error": err.Error(),
+		})
 	}
 
 	c.Cookie(&fiber.Cookie{
@@ -86,6 +96,7 @@ func (u *userRouter) login(c *fiber.Ctx) error {
 
 	err := c.BodyParser(user)
 	if err != nil {
+		u.log.Error().Err(err).Msg("")
 		return c.Status(http.StatusBadRequest).JSON(fiber.Map{
 			"error": err.Error(),
 		})
@@ -93,6 +104,7 @@ func (u *userRouter) login(c *fiber.Ctx) error {
 
 	err = u.con.Login(user)
 	if err != nil {
+		u.log.Error().Err(err).Msg("")
 		return c.Status(http.StatusBadRequest).JSON(fiber.Map{
 			"error": err.Error(),
 		})
@@ -100,7 +112,10 @@ func (u *userRouter) login(c *fiber.Ctx) error {
 
 	token, err := security.GenerateJWT(user)
 	if err != nil {
-		return err
+		u.log.Error().Err(err).Msg("")
+		return c.Status(http.StatusBadRequest).JSON(fiber.Map{
+			"error": err.Error(),
+		})
 	}
 
 	c.Cookie(&fiber.Cookie{
@@ -126,6 +141,7 @@ func (u *userRouter) getUser(c *fiber.Ctx) error {
 
 	userId, err := strconv.Atoi(c.Params("userId"))
 	if err != nil {
+		u.log.Error().Err(err).Msg("")
 		return c.Status(http.StatusBadRequest).JSON(fiber.Map{
 			"error": err.Error(),
 		})
@@ -135,6 +151,7 @@ func (u *userRouter) getUser(c *fiber.Ctx) error {
 
 	err = u.con.GetUser(&user)
 	if err != nil {
+		u.log.Error().Err(err).Msg("")
 		return c.Status(http.StatusBadRequest).JSON(fiber.Map{
 			"error": err.Error(),
 		})
@@ -158,6 +175,7 @@ func (u *userRouter) getUsers(c *fiber.Ctx) error {
 
 	err := u.con.GetUsers(&users, parser)
 	if err != nil {
+		u.log.Error().Err(err).Msg("")
 		return c.Status(http.StatusBadRequest).JSON(fiber.Map{
 			"error": err.Error(),
 		})

@@ -29,7 +29,6 @@ func NewUserController(db *gorm.DB) UserController {
 
 // Register will register new user in the system.
 func (u *userController) Register(user *models.User) error {
-
 	err := u.validateUser(user)
 	if err != nil {
 		return err

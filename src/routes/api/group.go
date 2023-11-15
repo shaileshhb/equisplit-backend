@@ -5,6 +5,7 @@ import (
 	"strconv"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/rs/zerolog"
 	"github.com/shaileshhb/equisplit/src/controllers"
 	"github.com/shaileshhb/equisplit/src/models"
 	"github.com/shaileshhb/equisplit/src/security"
@@ -20,22 +21,26 @@ type GroupRouter interface {
 }
 
 type groupRouter struct {
-	con controllers.GroupController
+	con  controllers.GroupController
+	auth security.Authentication
+	log  zerolog.Logger
 }
 
 // NewGroupRouter will create new instance of GroupRouter.
-func NewGroupRouter(con controllers.GroupController) GroupRouter {
+func NewGroupRouter(con controllers.GroupController, auth security.Authentication, log zerolog.Logger) GroupRouter {
 	return &groupRouter{
-		con: con,
+		con:  con,
+		auth: auth,
+		log:  log,
 	}
 }
 
 // RegisterRoutes will register routes for group.
 func (g *groupRouter) RegisterRoutes(router fiber.Router) {
-	router.Get("/:userId<int>/group", security.MandatoryAuthMiddleware, g.getUserGroups)
-	router.Post("/:userId<int>/group", security.MandatoryAuthMiddleware, g.createGroup)
-	router.Put("/:userId<int>/group/:groupId<int>", security.MandatoryAuthMiddleware, g.updateGroup)
-	router.Delete("/:userId<int>/group/:groupId<int>", security.MandatoryAuthMiddleware, g.deleteGroup)
+	router.Get("/:userId<int>/group", g.auth.MandatoryAuthMiddleware, g.getUserGroups)
+	router.Post("/:userId<int>/group", g.auth.MandatoryAuthMiddleware, g.createGroup)
+	router.Put("/:userId<int>/group/:groupId<int>", g.auth.MandatoryAuthMiddleware, g.updateGroup)
+	router.Delete("/:userId<int>/group/:groupId<int>", g.auth.MandatoryAuthMiddleware, g.deleteGroup)
 }
 
 // createGroup will create new group for specified user.
@@ -44,6 +49,7 @@ func (g *groupRouter) createGroup(c *fiber.Ctx) error {
 
 	err := c.BodyParser(group)
 	if err != nil {
+		g.log.Error().Err(err).Msg("")
 		return c.Status(http.StatusBadRequest).JSON(fiber.Map{
 			"error": err.Error(),
 		})
@@ -51,6 +57,7 @@ func (g *groupRouter) createGroup(c *fiber.Ctx) error {
 
 	id, err := strconv.Atoi(c.Params("userId", "0"))
 	if err != nil {
+		g.log.Error().Err(err).Msg("")
 		return c.Status(http.StatusBadRequest).JSON(fiber.Map{
 			"error": err.Error(),
 		})
@@ -60,6 +67,7 @@ func (g *groupRouter) createGroup(c *fiber.Ctx) error {
 
 	err = g.con.CreateGroup(group)
 	if err != nil {
+		g.log.Error().Err(err).Msg("")
 		return c.Status(http.StatusBadRequest).JSON(fiber.Map{
 			"error": err.Error(),
 		})
@@ -74,6 +82,7 @@ func (g *groupRouter) updateGroup(c *fiber.Ctx) error {
 
 	err := c.BodyParser(group)
 	if err != nil {
+		g.log.Error().Err(err).Msg("")
 		return c.Status(http.StatusBadRequest).JSON(fiber.Map{
 			"error": err.Error(),
 		})
@@ -81,6 +90,7 @@ func (g *groupRouter) updateGroup(c *fiber.Ctx) error {
 
 	id, err := strconv.Atoi(c.Params("userId", "0"))
 	if err != nil {
+		g.log.Error().Err(err).Msg("")
 		return c.Status(http.StatusBadRequest).JSON(fiber.Map{
 			"error": err.Error(),
 		})
@@ -90,6 +100,7 @@ func (g *groupRouter) updateGroup(c *fiber.Ctx) error {
 
 	id, err = strconv.Atoi(c.Params("groupId", "0"))
 	if err != nil {
+		g.log.Error().Err(err).Msg("")
 		return c.Status(http.StatusBadRequest).JSON(fiber.Map{
 			"error": err.Error(),
 		})
@@ -99,6 +110,7 @@ func (g *groupRouter) updateGroup(c *fiber.Ctx) error {
 
 	err = g.con.CreateGroup(group)
 	if err != nil {
+		g.log.Error().Err(err).Msg("")
 		return c.Status(http.StatusBadRequest).JSON(fiber.Map{
 			"error": err.Error(),
 		})
@@ -113,6 +125,7 @@ func (g *groupRouter) deleteGroup(c *fiber.Ctx) error {
 
 	id, err := strconv.Atoi(c.Params("userId", "0"))
 	if err != nil {
+		g.log.Error().Err(err).Msg("")
 		return c.Status(http.StatusBadRequest).JSON(fiber.Map{
 			"error": err.Error(),
 		})
@@ -122,6 +135,7 @@ func (g *groupRouter) deleteGroup(c *fiber.Ctx) error {
 
 	id, err = strconv.Atoi(c.Params("groupId", "0"))
 	if err != nil {
+		g.log.Error().Err(err).Msg("")
 		return c.Status(http.StatusBadRequest).JSON(fiber.Map{
 			"error": err.Error(),
 		})
@@ -131,6 +145,7 @@ func (g *groupRouter) deleteGroup(c *fiber.Ctx) error {
 
 	err = g.con.DeleteGroup(group)
 	if err != nil {
+		g.log.Error().Err(err).Msg("")
 		return c.Status(http.StatusBadRequest).JSON(fiber.Map{
 			"error": err.Error(),
 		})
@@ -146,6 +161,7 @@ func (g *groupRouter) getUserGroups(c *fiber.Ctx) error {
 
 	id, err := strconv.Atoi(c.Params("userId", "0"))
 	if err != nil {
+		g.log.Error().Err(err).Msg("")
 		return c.Status(http.StatusBadRequest).JSON(fiber.Map{
 			"error": err.Error(),
 		})
@@ -155,6 +171,7 @@ func (g *groupRouter) getUserGroups(c *fiber.Ctx) error {
 
 	err = g.con.GetUserGroups(group, uint(id), &totalCount, parser)
 	if err != nil {
+		g.log.Error().Err(err).Msg("")
 		return c.Status(http.StatusBadRequest).JSON(fiber.Map{
 			"error": err.Error(),
 		})

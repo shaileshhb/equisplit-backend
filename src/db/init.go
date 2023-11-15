@@ -15,7 +15,5 @@ func InitDB() *gorm.DB {
 	}
 
 	db := lo.Must(gorm.Open(postgres.Open(dsn), config))
-
-	// ADD CODE FOR AUTOMIGRATION
 	return db
 }

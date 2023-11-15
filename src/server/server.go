@@ -76,7 +76,7 @@ func (ser *Server) MigrateTables() {
 	lo.Must0(ser.DB.AutoMigrate(&models.User{}))
 	lo.Must0(ser.DB.AutoMigrate(&models.Group{}))
 	lo.Must0(ser.DB.AutoMigrate(&models.UserGroup{}))
-	lo.Must0(ser.DB.AutoMigrate(&models.UserGroupHistory{}))
+	lo.Must0(ser.DB.AutoMigrate(&models.GroupTransaction{}))
 
 	config := models.NewModuleConfig(ser.DB)
 	config.TableMigration(ser.WG)

@@ -138,6 +138,9 @@ func (u *userGroupController) GetUserGroups(userGroups *[]models.UserGroupDTO, u
 		return err
 	}
 
+	// for index := range *userGroups {
+	// }
+
 	uow.Commit()
 	return nil
 }
@@ -177,20 +180,3 @@ func (u *userGroupController) doesUserGroupExist(userGroupId uint) error {
 	}
 	return nil
 }
-
-// doesUserExistInGroup will check if specified user exist or not.
-// func (u *userGroupController) doesUserExistInGroup(userGroup *models.UserGroup) error {
-// 	tempUserGroup := models.UserGroup{}
-// 	err := u.db.Where("user_groups.user_id = ? AND user_groups.group_id = ?", userGroup.UserId, userGroup.GroupId).
-// 		First(&tempUserGroup).Error
-// 	if err != nil {
-// 		if err == gorm.ErrRecordNotFound {
-// 			return errors.New("user not found in this group")
-// 		}
-// 		return err
-// 	}
-
-// 	userGroup.ID = tempUserGroup.ID
-
-// 	return nil
-// }

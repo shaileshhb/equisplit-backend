@@ -18,14 +18,22 @@ func (*UserGroup) TableName() string {
 // UserGroup entity
 type UserGroupDTO struct {
 	BaseDTO
-	User           *User   `json:"user"`
-	Group          *Group  `json:"group"`
-	UserId         uint    `json:"userId"`
-	GroupId        uint    `json:"groupId"`
-	OutgoingAmount float64 `json:"outgoingAmount"`
-	IncomingAmount float64 `json:"incomingAmount"`
+	Summary        *GroupSummary `json:"summary"`
+	User           *User         `json:"user"`
+	Group          *Group        `json:"group"`
+	UserId         uint          `json:"userId"`
+	GroupId        uint          `json:"groupId"`
+	OutgoingAmount float64       `json:"outgoingAmount"`
+	IncomingAmount float64       `json:"incomingAmount"`
 }
 
 func (*UserGroupDTO) TableName() string {
 	return "user_groups"
+}
+
+// GroupSummary will contain details of how much a user has outgoing and incoming amount
+type GroupSummary struct {
+	UserId         uint    `json:"userId"`
+	OutgoingAmount float64 `json:"outgoingAmount"`
+	IncomingAmount float64 `json:"incomingAmount"`
 }

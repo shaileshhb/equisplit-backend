@@ -41,6 +41,8 @@ func (g *groupRouter) RegisterRoutes(router fiber.Router) {
 	router.Post("/:userId<int>/group", g.auth.MandatoryAuthMiddleware, g.createGroup)
 	router.Put("/:userId<int>/group/:groupId<int>", g.auth.MandatoryAuthMiddleware, g.updateGroup)
 	router.Delete("/:userId<int>/group/:groupId<int>", g.auth.MandatoryAuthMiddleware, g.deleteGroup)
+
+	g.log.Info().Msg("Group routes registered")
 }
 
 // createGroup will create new group for specified user.

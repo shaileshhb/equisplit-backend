@@ -26,7 +26,7 @@ type Server struct {
 	Name   string
 	DB     *gorm.DB
 	App    *fiber.App
-	Router *fiber.Router
+	Router fiber.Router
 	WG     *sync.WaitGroup
 	Log    zerolog.Logger
 	Auth   security.Authentication
@@ -61,13 +61,13 @@ func (ser *Server) InitializeRouter() {
 	apiV1 := app.Group("api/v1")
 
 	ser.App = app
-	ser.Router = &apiV1
+	ser.Router = apiV1
 }
 
 // RegisterRoutes will register the specified routes in controllers.
 func (ser *Server) RegisterRoutes(controllers []Controller) {
 	for _, controller := range controllers {
-		controller.RegisterRoutes(*ser.Router)
+		controller.RegisterRoutes(ser.Router)
 	}
 }
 

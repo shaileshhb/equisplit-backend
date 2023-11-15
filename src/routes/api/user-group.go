@@ -40,6 +40,7 @@ func (u *userGroupRouter) RegisterRoutes(router fiber.Router) {
 	router.Get("/user/:userId<int>/group", u.auth.MandatoryAuthMiddleware, u.getUserGroups)
 	router.Post("/group/:groupId<int>/user", u.auth.MandatoryAuthMiddleware, u.addUserToGroup)
 	router.Post("/group/:groupId<int>/user/:userGroupId", u.auth.MandatoryAuthMiddleware, u.deleteUserFromGroup)
+	u.log.Info().Msg("UserGroup routes registered")
 }
 
 // addUserToGroup will add user to specified group

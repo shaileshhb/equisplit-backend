@@ -43,6 +43,8 @@ func (u *userRouter) RegisterRoutes(router fiber.Router) {
 	router.Get("/logout", u.logout)
 	router.Get("/user/:userId<int>", u.auth.MandatoryAuthMiddleware, u.getUser)
 	router.Get("/user", u.auth.MandatoryAuthMiddleware, u.getUsers)
+
+	u.log.Info().Msg("User routes registered")
 }
 
 // register will add user.

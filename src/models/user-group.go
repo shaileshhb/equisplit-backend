@@ -18,13 +18,13 @@ func (*UserGroup) TableName() string {
 // UserGroup entity
 type UserGroupDTO struct {
 	BaseDTO
-	Summary        *GroupSummary `json:"summary"`
 	User           *User         `json:"user"`
 	Group          *Group        `json:"group"`
 	UserId         uint          `json:"userId"`
 	GroupId        uint          `json:"groupId"`
 	OutgoingAmount float64       `json:"outgoingAmount"`
 	IncomingAmount float64       `json:"incomingAmount"`
+	Summary        *GroupSummary `json:"summary" gorm:"-"`
 }
 
 func (*UserGroupDTO) TableName() string {

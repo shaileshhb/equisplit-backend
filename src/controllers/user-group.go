@@ -66,20 +66,6 @@ func (u *userGroupController) AddUserToGroup(userGroup *models.UserGroup) error 
 
 // DeleteUserFromGroup will delete specified user from the group.
 func (u *userGroupController) DeleteUserFromGroup(userGroup *models.UserGroup) error {
-	// err := u.doesUserExist(userGroup.UserId)
-	// if err != nil {
-	// 	return err
-	// }
-
-	// err = u.doesGroupExist(userGroup.GroupId)
-	// if err != nil {
-	// 	return err
-	// }
-
-	// err = u.doesUserExistInGroup(userGroup)
-	// if err != nil {
-	// 	return err
-	// }
 
 	err := u.doesUserGroupExist(userGroup.ID)
 	if err != nil {
@@ -138,8 +124,21 @@ func (u *userGroupController) GetUserGroups(userGroups *[]models.UserGroupDTO, u
 		return err
 	}
 
-	// for index := range *userGroups {
-	// }
+	for index := range *userGroups {
+		err = uow.DB.Select("SUM(amount) AS outgoing_amount").Table("group_transactions").
+			Where("group_transactions.group_id = ? AND group_transactions.payer_id = ?", (*userGroups)[index].GroupId, userId).
+			Scan(&(*userGroups)[index].Summary).Error
+		if err != nil {
+			return err
+		}
+
+		err = uow.DB.Select("SUM(amount) AS incoming_amount").Table("group_transactions").
+			Where("group_transactions.group_id = ? AND group_transactions.payee_id = ?", (*userGroups)[index].GroupId, userId).
+			Scan(&(*userGroups)[index].Summary).Error
+		if err != nil {
+			return err
+		}
+	}
 
 	uow.Commit()
 	return nil

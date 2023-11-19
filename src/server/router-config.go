@@ -20,5 +20,8 @@ func (ser *Server) CreateRouterInstance() {
 	transactioncon := controllers.NewGroupTransactionController(ser.DB)
 	transactionapi := api.NewGroupTransactionRouter(transactioncon, ser.Auth, ser.Log)
 
-	ser.RegisterRoutes([]Controller{userapi, groupapi, usergroupapi, transactionapi})
+	invitationcon := controllers.NewUserInvitationController(ser.DB)
+	invitationapi := api.NewUserInvitationRouter(invitationcon, ser.Auth, ser.Log)
+
+	ser.RegisterRoutes([]Controller{userapi, groupapi, usergroupapi, transactionapi, invitationapi})
 }

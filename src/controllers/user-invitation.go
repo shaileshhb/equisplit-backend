@@ -11,6 +11,7 @@ import (
 
 type UserInvitationController interface {
 	Add(invitation *models.UserInvitation) error
+	AcceptInvitation(invitation *models.UserInvitation) error
 }
 
 type userInvitationController struct {
@@ -71,6 +72,46 @@ func (ui *userInvitationController) Add(invitation *models.UserInvitation) error
 	return nil
 }
 
+// AcceptInvitation will mark invitation as accepted and add user in the group that they were invited to.
+func (ui *userInvitationController) AcceptInvitation(invitation *models.UserInvitation) error {
+
+	err := ui.doesUserInvitationExist(invitation.ID)
+	if err != nil {
+		return err
+	}
+
+	err = ui.doesGroupExist(invitation.GroupId)
+	if err != nil {
+		return err
+	}
+
+	err = ui.doesUserExist(invitation.UserId)
+	if err != nil {
+		return err
+	}
+
+	uow := db.NewUnitOfWork(ui.db)
+	defer uow.RollBack()
+
+	err = uow.DB.Updates(map[string]interface{}{
+		"IsAccepted": true,
+	}).Error
+	if err != nil {
+		return err
+	}
+
+	err = uow.DB.Create(&models.UserGroup{
+		UserId:  invitation.UserId,
+		GroupId: invitation.GroupId,
+	}).Error
+	if err != nil {
+		return err
+	}
+
+	uow.Commit()
+	return nil
+}
+
 // doesUserExist will check if specified user exist or not.
 func (u *userInvitationController) doesUserExist(userId uint) error {
 	err := u.db.Where("users.id = ?", userId).First(&models.User{}).Error
@@ -105,6 +146,18 @@ func (u *userInvitationController) doesUserGroupExist(userId, groupId uint) erro
 	}
 	if totalCount > 0 {
 		return errors.New("user already exist in group")
+	}
+	return nil
+}
+
+// doesUserInvitationExist will check if specified group exist or not.
+func (u *userInvitationController) doesUserInvitationExist(invitationId uint) error {
+	err := u.db.Where("id = ?", invitationId).First(&models.UserInvitation{}).Error
+	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return errors.New("invitation not found")
+		}
+		return err
 	}
 	return nil
 }

@@ -9,6 +9,8 @@ type UserGroup struct {
 	GroupId        uint    `json:"groupId" gorm:"index"`
 	OutgoingAmount float64 `json:"outgoingAmount" gorm:"type:float;default:0"`
 	IncomingAmount float64 `json:"incomingAmount" gorm:"type:float;default:0"`
+
+	// TODO: do I need to have a column to know who added the user in this group?
 }
 
 func (*UserGroup) TableName() string {

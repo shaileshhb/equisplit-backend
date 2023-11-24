@@ -13,6 +13,7 @@ import (
 type UserInvitationRouter interface {
 	RegisterRoutes(router fiber.Router)
 	add(c *fiber.Ctx) error
+	acceptInvitation(c *fiber.Ctx) error
 }
 
 type userInvitationRouter struct {
@@ -33,6 +34,7 @@ func NewUserInvitationRouter(con controllers.UserInvitationController, auth secu
 // RegisterRoutes will register routes for user-group router.
 func (u *userInvitationRouter) RegisterRoutes(router fiber.Router) {
 	router.Post("/user-invitation", u.auth.MandatoryAuthMiddleware, u.add)
+	router.Put("/user-invitation", u.auth.MandatoryAuthMiddleware, u.acceptInvitation)
 
 	u.log.Info().Msg("UserInvitation routes registered")
 }
@@ -61,5 +63,28 @@ func (u *userInvitationRouter) add(c *fiber.Ctx) error {
 		})
 	}
 
-	return c.Status(http.StatusOK).JSON(nil)
+	return c.Status(http.StatusCreated).JSON(nil)
+}
+
+// acceptInvitation will mark invitation as accepted and add user in the group that they were invited to.
+func (u *userInvitationRouter) acceptInvitation(c *fiber.Ctx) error {
+	userInvitation := models.UserInvitation{}
+
+	err := c.BodyParser(&userInvitation)
+	if err != nil {
+		u.log.Error().Err(err).Msg("")
+		return c.Status(http.StatusBadRequest).JSON(fiber.Map{
+			"error": err.Error(),
+		})
+	}
+
+	err = u.con.AcceptInvitation(&userInvitation)
+	if err != nil {
+		u.log.Error().Err(err).Msg("")
+		return c.Status(http.StatusBadRequest).JSON(fiber.Map{
+			"error": err.Error(),
+		})
+	}
+
+	return c.Status(http.StatusAccepted).JSON(nil)
 }

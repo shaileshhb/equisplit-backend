@@ -11,7 +11,9 @@ import (
 
 type UserInvitationController interface {
 	Add(invitation *models.UserInvitation) error
-	AcceptInvitation(invitation *models.UserInvitation) error
+	UpdateInvitation(invitation *models.UserInvitation) error
+	DeleteInvitation(invitation *models.UserInvitation) error
+	GetGroupInvitation(invitations *[]models.UserInvitation, groupId uint) error
 }
 
 type userInvitationController struct {
@@ -72,8 +74,8 @@ func (ui *userInvitationController) Add(invitation *models.UserInvitation) error
 	return nil
 }
 
-// AcceptInvitation will mark invitation as accepted and add user in the group that they were invited to.
-func (ui *userInvitationController) AcceptInvitation(invitation *models.UserInvitation) error {
+// UpdateInvitation will mark invitation as accepted and add user in the group that they were invited to.
+func (ui *userInvitationController) UpdateInvitation(invitation *models.UserInvitation) error {
 
 	err := ui.doesUserInvitationExist(invitation.ID)
 	if err != nil {
@@ -94,16 +96,58 @@ func (ui *userInvitationController) AcceptInvitation(invitation *models.UserInvi
 	defer uow.RollBack()
 
 	err = uow.DB.Updates(map[string]interface{}{
-		"IsAccepted": true,
+		"IsAccepted": invitation.IsAccepted,
 	}).Error
 	if err != nil {
 		return err
 	}
 
-	err = uow.DB.Create(&models.UserGroup{
-		UserId:  invitation.UserId,
-		GroupId: invitation.GroupId,
-	}).Error
+	if invitation.IsAccepted != nil && *invitation.IsAccepted {
+		err = uow.DB.Create(&models.UserGroup{
+			UserId:  invitation.UserId,
+			GroupId: invitation.GroupId,
+		}).Error
+		if err != nil {
+			return err
+		}
+	}
+
+	uow.Commit()
+	return nil
+}
+
+// GetGroupInvitation will fetch all invitations of specified group.
+func (ui *userInvitationController) GetGroupInvitation(invitations *[]models.UserInvitation, groupId uint) error {
+
+	err := ui.doesGroupExist(groupId)
+	if err != nil {
+		return err
+	}
+
+	uow := db.NewUnitOfWork(ui.db)
+	defer uow.RollBack()
+
+	err = uow.DB.Where("group_id = ?", groupId).Find(&invitations).Error
+	if err != nil {
+		return err
+	}
+
+	uow.Commit()
+	return nil
+}
+
+// DeleteInvitation will delete the specified invitation
+func (ui *userInvitationController) DeleteInvitation(invitation *models.UserInvitation) error {
+
+	err := ui.doesUserInvitationExist(invitation.ID)
+	if err != nil {
+		return err
+	}
+
+	uow := db.NewUnitOfWork(ui.db)
+	defer uow.RollBack()
+
+	err = uow.DB.Delete(invitation).Error
 	if err != nil {
 		return err
 	}

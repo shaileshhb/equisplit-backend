@@ -4,6 +4,7 @@ import (
 	"sync"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/redis/go-redis/v9"
 	"github.com/rs/zerolog"
 	"github.com/samber/lo"
 	"github.com/shaileshhb/equisplit/src/models"
@@ -25,6 +26,7 @@ type ModuleConfig interface {
 type Server struct {
 	Name   string
 	DB     *gorm.DB
+	RDB    *redis.Client
 	App    *fiber.App
 	Router fiber.Router
 	WG     *sync.WaitGroup
@@ -33,10 +35,11 @@ type Server struct {
 	// Config config.ConfReader
 }
 
-func NewServer(name string, db *gorm.DB, log zerolog.Logger, auth security.Authentication, wg *sync.WaitGroup) *Server {
+func NewServer(name string, db *gorm.DB, rdb *redis.Client, log zerolog.Logger, auth security.Authentication, wg *sync.WaitGroup) *Server {
 	return &Server{
 		Name: name,
 		DB:   db,
+		RDB:  rdb,
 		WG:   wg,
 		Auth: auth,
 		Log:  log,

@@ -8,7 +8,7 @@ import (
 func (ser *Server) CreateRouterInstance() {
 	ser.InitializeRouter()
 
-	usercon := controllers.NewUserController(ser.DB)
+	usercon := controllers.NewUserController(ser.DB, ser.RDB)
 	userapi := api.NewUserRouter(usercon, ser.Auth, ser.Log)
 
 	groupcon := controllers.NewGroupController(ser.DB)

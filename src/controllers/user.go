@@ -2,7 +2,12 @@ package controllers
 
 import (
 	"errors"
+	"fmt"
+	"os"
+	"strconv"
+	"time"
 
+	"github.com/redis/go-redis/v9"
 	"github.com/shaileshhb/equisplit/src/db"
 	"github.com/shaileshhb/equisplit/src/models"
 	"github.com/shaileshhb/equisplit/src/security"
@@ -15,16 +20,67 @@ type UserController interface {
 	Login(user *models.User) error
 	GetUser(user *models.UserDTO) error
 	GetUsers(users *[]models.UserDTO, parser *util.Parser) error
+
+	// Testing
+	Unlimited(ip string) error
 }
 
 type userController struct {
-	db *gorm.DB
+	db  *gorm.DB
+	rdb *redis.Client
 }
 
-func NewUserController(db *gorm.DB) UserController {
+func NewUserController(db *gorm.DB, rdb *redis.Client) UserController {
 	return &userController{
-		db: db,
+		db:  db,
+		rdb: rdb,
 	}
+}
+
+func (u *userController) Unlimited(ip string) error {
+	value, err := u.rdb.Get(db.Ctx, ip).Result()
+	if err != nil && err != redis.Nil {
+		return err
+	}
+
+	// this indicates that no entry exist for the specified IP in cache.
+	if err == redis.Nil {
+		fmt.Println("setting new value for specified ip")
+		err := u.rdb.Set(db.Ctx, ip, os.Getenv("API_QUOTA"), 60*time.Second).Err()
+		if err != nil {
+			return err
+		}
+		value = os.Getenv("API_QUOTA")
+	}
+
+	fmt.Println("==================value is ->", value, len(value))
+	var valueInt int
+
+	if len(value) > 0 {
+		valueInt, err = strconv.Atoi(value)
+		if err != nil {
+			return err
+		}
+	}
+
+	fmt.Println("==================value int ->", valueInt)
+
+	if valueInt <= 0 {
+		limit, err := u.rdb.TTL(db.Ctx, ip).Result()
+		if err != nil {
+			return err
+		}
+
+		fmt.Println("==============limit after calling ttl", limit)
+		return errors.New("rate limit exceeded")
+	}
+
+	// err = u.rdb.Set(db.Ctx, ip, valueInt-1, 60*time.Second).Err()
+	// if err != nil {
+	// 	return err
+	// }
+
+	return nil
 }
 
 // Register will register new user in the system.

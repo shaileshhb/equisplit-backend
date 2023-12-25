@@ -6,16 +6,19 @@ import (
 	"strings"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/redis/go-redis/v9"
 	"github.com/rs/zerolog"
 )
 
 type Authentication struct {
+	rdb                     *redis.Client
 	log                     zerolog.Logger
 	authorizationTypeBearer string
 }
 
-func NewAuthentication(log zerolog.Logger) Authentication {
+func NewAuthentication(log zerolog.Logger, rdb *redis.Client) Authentication {
 	return Authentication{
+		rdb:                     rdb,
 		log:                     log,
 		authorizationTypeBearer: "bearer",
 	}

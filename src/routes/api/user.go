@@ -1,6 +1,7 @@
 package api
 
 import (
+	"fmt"
 	"net/http"
 	"strconv"
 
@@ -44,7 +45,28 @@ func (u *userRouter) RegisterRoutes(router fiber.Router) {
 	router.Get("/user/:userId<int>", u.auth.MandatoryAuthMiddleware, u.getUser)
 	router.Get("/user", u.auth.MandatoryAuthMiddleware, u.getUsers)
 
+	router.Get("/unlimited", u.unlimited)
+	router.Get("/limited", u.limited)
+
 	u.log.Info().Msg("User routes registered")
+}
+
+func (u *userRouter) unlimited(c *fiber.Ctx) error {
+	fmt.Println(c.Hostname(), c.IP())
+
+	err := u.con.Unlimited(c.IP())
+	if err != nil {
+		u.log.Error().Err(err).Msg("")
+		return c.Status(http.StatusTooManyRequests).JSON(fiber.Map{
+			"error": err.Error(),
+		})
+	}
+
+	return c.Status(http.StatusCreated).JSON("Unlimited")
+}
+
+func (u *userRouter) limited(c *fiber.Ctx) error {
+	return c.Status(http.StatusCreated).JSON("Limited")
 }
 
 // register will add user.

@@ -7,6 +7,7 @@ import (
 	"sync"
 	"syscall"
 
+	"github.com/joho/godotenv"
 	"github.com/shaileshhb/equisplit/src/db"
 	"github.com/shaileshhb/equisplit/src/log"
 	"github.com/shaileshhb/equisplit/src/security"
@@ -14,14 +15,21 @@ import (
 )
 
 func main() {
+	err := godotenv.Load()
+	if err != nil {
+		panic(err)
+	}
+
 	logger := log.InitializeLogger()
 
 	// Initialize the database
 	database := db.InitDB()
+	rdb := db.InitCache()
+	defer rdb.Close()
 	var wg sync.WaitGroup
 
-	auth := security.NewAuthentication(logger)
-	ser := server.NewServer("EquiSplit", database, logger, auth, &wg)
+	auth := security.NewAuthentication(logger, rdb)
+	ser := server.NewServer("EquiSplit", database, rdb, logger, auth, &wg)
 	ser.CreateRouterInstance()
 	// db.MigrateTables(ser)
 	ser.MigrateTables()
@@ -29,7 +37,7 @@ func main() {
 
 	// Stop Server On System Call or Interrupt.
 	ch := make(chan os.Signal, 1)
-	signal.Notify(ch, os.Interrupt, syscall.SIGTERM)
+	signal.Notify(ch, os.Interrupt, syscall.SIGINT)
 	<-ch
 	stopApp(ser)
 }

@@ -3,9 +3,6 @@ package controllers
 import (
 	"errors"
 	"fmt"
-	"os"
-	"strconv"
-	"time"
 
 	"github.com/redis/go-redis/v9"
 	"github.com/shaileshhb/equisplit/src/db"
@@ -38,47 +35,51 @@ func NewUserController(db *gorm.DB, rdb *redis.Client) UserController {
 }
 
 func (u *userController) Unlimited(ip string) error {
-	value, err := u.rdb.Get(db.Ctx, ip).Result()
-	if err != nil && err != redis.Nil {
-		return err
-	}
+	// value, err := u.rdb.Get(db.Ctx, ip).Result()
+	// if err != nil && err != redis.Nil {
+	// 	return err
+	// }
 
-	// this indicates that no entry exist for the specified IP in cache.
-	if err == redis.Nil {
-		fmt.Println("setting new value for specified ip")
-		err := u.rdb.Set(db.Ctx, ip, os.Getenv("API_QUOTA"), 60*time.Second).Err()
-		if err != nil {
-			return err
-		}
-		value = os.Getenv("API_QUOTA")
-	}
+	// // this indicates that no entry exist for the specified IP in cache.
+	// if err == redis.Nil {
+	// 	fmt.Println("setting new value for specified ip")
+	// 	err := u.rdb.Set(db.Ctx, ip, os.Getenv("API_QUOTA"), 60*time.Second).Err()
+	// 	if err != nil {
+	// 		return err
+	// 	}
+	// 	value = os.Getenv("API_QUOTA")
+	// }
 
-	fmt.Println("==================value is ->", value, len(value))
-	var valueInt int
+	// fmt.Println("==================value is ->", value, len(value))
+	// var valueInt int
 
-	if len(value) > 0 {
-		valueInt, err = strconv.Atoi(value)
-		if err != nil {
-			return err
-		}
-	}
+	// if len(value) > 0 {
+	// 	valueInt, err = strconv.Atoi(value)
+	// 	if err != nil {
+	// 		return err
+	// 	}
+	// }
 
-	fmt.Println("==================value int ->", valueInt)
+	// fmt.Println("==================value int ->", valueInt)
 
-	if valueInt <= 0 {
-		limit, err := u.rdb.TTL(db.Ctx, ip).Result()
-		if err != nil {
-			return err
-		}
+	// if valueInt <= 0 {
+	// 	limit, err := u.rdb.TTL(db.Ctx, ip).Result()
+	// 	if err != nil {
+	// 		return err
+	// 	}
 
-		fmt.Println("==============limit after calling ttl", limit)
-		return errors.New("rate limit exceeded")
-	}
+	// 	fmt.Println("==============limit after calling ttl", limit)
+	// 	return errors.New("rate limit exceeded")
+	// }
 
 	// err = u.rdb.Set(db.Ctx, ip, valueInt-1, 60*time.Second).Err()
 	// if err != nil {
 	// 	return err
 	// }
+
+	fmt.Println("====================================================")
+	fmt.Println("INSIDE USERGO UNLIMITED SERVICE")
+	fmt.Println("====================================================")
 
 	return nil
 }

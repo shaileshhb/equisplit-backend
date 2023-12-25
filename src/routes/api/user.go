@@ -45,7 +45,7 @@ func (u *userRouter) RegisterRoutes(router fiber.Router) {
 	router.Get("/user/:userId<int>", u.auth.MandatoryAuthMiddleware, u.getUser)
 	router.Get("/user", u.auth.MandatoryAuthMiddleware, u.getUsers)
 
-	router.Get("/unlimited", u.unlimited)
+	router.Get("/unlimited", u.auth.RateLimiter, u.unlimited)
 	router.Get("/limited", u.limited)
 
 	u.log.Info().Msg("User routes registered")
@@ -57,7 +57,7 @@ func (u *userRouter) unlimited(c *fiber.Ctx) error {
 	err := u.con.Unlimited(c.IP())
 	if err != nil {
 		u.log.Error().Err(err).Msg("")
-		return c.Status(http.StatusTooManyRequests).JSON(fiber.Map{
+		return c.Status(http.StatusBadRequest).JSON(fiber.Map{
 			"error": err.Error(),
 		})
 	}

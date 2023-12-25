@@ -4,3 +4,5 @@
 
 # Postgres Data Files 
 /data/
+
+*/.env

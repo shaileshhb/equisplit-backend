@@ -58,7 +58,7 @@ func (ui *userInvitationController) Add(invitation *models.UserInvitation) error
 		return err
 	}
 
-	if tempInvitation.ID != uuid.Nil {
+	if tempInvitation.Id != uuid.Nil {
 		return errors.New("user already invited")
 	}
 
@@ -78,7 +78,7 @@ func (ui *userInvitationController) Add(invitation *models.UserInvitation) error
 // UpdateInvitation will mark invitation as accepted and add user in the group that they were invited to.
 func (ui *userInvitationController) UpdateInvitation(invitation *models.UserInvitation) error {
 
-	err := ui.doesUserInvitationExist(invitation.ID)
+	err := ui.doesUserInvitationExist(invitation.Id)
 	if err != nil {
 		return err
 	}
@@ -140,7 +140,7 @@ func (ui *userInvitationController) GetGroupInvitation(invitations *[]models.Use
 // DeleteInvitation will delete the specified invitation
 func (ui *userInvitationController) DeleteInvitation(invitation *models.UserInvitation) error {
 
-	err := ui.doesUserInvitationExist(invitation.ID)
+	err := ui.doesUserInvitationExist(invitation.Id)
 	if err != nil {
 		return err
 	}

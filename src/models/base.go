@@ -9,7 +9,7 @@ import (
 
 // Base for all models.
 type Base struct {
-	ID        uuid.UUID      `json:"id" gorm:"primarykey"`
+	Id        uuid.UUID      `json:"id" gorm:"primarykey"`
 	CreatedAt time.Time      `json:"createdAt"`
 	UpdatedAt time.Time      `json:"-"`
 	DeletedAt gorm.DeletedAt `json:"-"`
@@ -23,6 +23,6 @@ type BaseDTO struct {
 }
 
 func (u *Base) BeforeCreate(tx *gorm.DB) (err error) {
-	u.ID = uuid.New()
+	u.Id = uuid.New()
 	return
 }

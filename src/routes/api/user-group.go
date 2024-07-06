@@ -86,7 +86,7 @@ func (u *userGroupRouter) deleteUserFromGroup(c *fiber.Ctx) error {
 		})
 	}
 
-	userGroup.ID = id
+	userGroup.Id = id
 
 	err = u.con.DeleteUserFromGroup(&userGroup)
 	if err != nil {
@@ -114,7 +114,7 @@ func (u *userGroupRouter) getGroupDetails(c *fiber.Ctx) error {
 	userInterface := c.Locals("user")
 	user := userInterface.(*models.User)
 
-	err = u.con.GetGroupDetails(&userGroups, groupId, user.ID)
+	err = u.con.GetGroupDetails(&userGroups, groupId, user.Id)
 	if err != nil {
 		u.log.Error().Err(err).Msg("")
 		return c.Status(http.StatusBadRequest).JSON(fiber.Map{

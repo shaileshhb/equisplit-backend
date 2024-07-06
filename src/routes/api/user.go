@@ -90,7 +90,7 @@ func (u *userRouter) register(c *fiber.Ctx) error {
 	})
 
 	userResponse := map[string]interface{}{
-		"userId": user.ID,
+		"userId": user.Id,
 		"token":  token,
 		"name":   user.Name,
 		"email":  user.Email,
@@ -135,7 +135,7 @@ func (u *userRouter) login(c *fiber.Ctx) error {
 	})
 
 	userResponse := map[string]interface{}{
-		"userId": user.ID,
+		"userId": user.Id,
 		"token":  token,
 		"name":   user.Name,
 		"email":  user.Email,

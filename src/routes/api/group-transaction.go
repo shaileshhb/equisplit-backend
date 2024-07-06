@@ -39,6 +39,7 @@ func (g *groupTransactionRouter) RegisterRoutes(router fiber.Router) {
 	router.Post("/group/:groupId<uuid>/transactions", g.auth.MandatoryAuthMiddleware, g.addMultiple)
 	router.Put("/transaction/:transactionId<uuid>", g.auth.MandatoryAuthMiddleware, g.markTransactionPaid)
 	router.Delete("/transaction/:transactionId<uuid>", g.auth.MandatoryAuthMiddleware, g.delete)
+	router.Get("/group/:groupId/transactions", g.auth.MandatoryAuthMiddleware, g.getTransactionDetails)
 	g.log.Info().Msg("GroupTransaction routes registered")
 }
 
@@ -65,7 +66,7 @@ func (g *groupTransactionRouter) add(c *fiber.Ctx) error {
 	userInterface := c.Locals("user")
 	user := userInterface.(*models.User)
 
-	transaction.PayerId = user.ID
+	transaction.PayerId = user.Id
 	transaction.GroupId = id
 
 	err = transaction.Validate()
@@ -112,7 +113,7 @@ func (g *groupTransactionRouter) addMultiple(c *fiber.Ctx) error {
 
 	for index := range transactions {
 		transactions[index].GroupId = groupId
-		transactions[index].PayerId = user.ID
+		transactions[index].PayerId = user.Id
 
 		err = transactions[index].Validate()
 		if err != nil {
@@ -146,13 +147,13 @@ func (g *groupTransactionRouter) markTransactionPaid(c *fiber.Ctx) error {
 		})
 	}
 
-	transaction.ID = transactionId
+	transaction.Id = transactionId
 
 	userInterface := c.Locals("user")
 	user := userInterface.(*models.User)
-	transaction.PayeeId = user.ID
+	transaction.PayeeId = user.Id
 
-	err = g.con.MarkTransactionPaid(&transaction, user.ID)
+	err = g.con.MarkTransactionPaid(&transaction, user.Id)
 	if err != nil {
 		g.log.Error().Err(err).Msg("")
 		return c.Status(http.StatusBadRequest).JSON(fiber.Map{
@@ -177,7 +178,7 @@ func (u *groupTransactionRouter) delete(c *fiber.Ctx) error {
 	userInterface := c.Locals("user")
 	user := userInterface.(*models.User)
 
-	err = u.con.Delete(user.ID, transactionId)
+	err = u.con.Delete(user.Id, transactionId)
 	if err != nil {
 		u.log.Error().Err(err).Msg("")
 		return c.Status(http.StatusBadRequest).JSON(fiber.Map{
@@ -186,4 +187,30 @@ func (u *groupTransactionRouter) delete(c *fiber.Ctx) error {
 	}
 
 	return c.Status(http.StatusAccepted).JSON(nil)
+}
+
+// getTransactionDetails will fetch amount to be fetched from all users for specified group
+func (u *groupTransactionRouter) getTransactionDetails(c *fiber.Ctx) error {
+	var userBalances []models.UserBalance
+
+	groupId, err := uuid.Parse(c.Params("groupId"))
+	if err != nil {
+		u.log.Error().Err(err).Msg("")
+		return c.Status(http.StatusBadRequest).JSON(fiber.Map{
+			"error": err.Error(),
+		})
+	}
+
+	userInterface := c.Locals("user")
+	user := userInterface.(*models.User)
+
+	err = u.con.GetTransactionDetails(&userBalances, user.Id, groupId)
+	if err != nil {
+		u.log.Error().Err(err).Msg("")
+		return c.Status(http.StatusBadRequest).JSON(fiber.Map{
+			"error": err.Error(),
+		})
+	}
+
+	return c.Status(http.StatusOK).JSON(userBalances)
 }

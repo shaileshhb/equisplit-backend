@@ -55,7 +55,7 @@ func (g *groupController) CreateGroup(group *models.Group) error {
 
 	err = uow.DB.Create(&models.UserGroup{
 		UserId:  group.CreatedBy,
-		GroupId: group.ID,
+		GroupId: group.Id,
 	}).Error
 	if err != nil {
 		return err
@@ -67,7 +67,7 @@ func (g *groupController) CreateGroup(group *models.Group) error {
 
 // UpdateGroup will update specified group details.
 func (g *groupController) UpdateGroup(group *models.Group) error {
-	err := g.doesGroupExist(group.ID)
+	err := g.doesGroupExist(group.Id)
 	if err != nil {
 		return err
 	}
@@ -91,13 +91,13 @@ func (g *groupController) UpdateGroup(group *models.Group) error {
 
 // DeleteGroup will delete specified group.
 func (g *groupController) DeleteGroup(group *models.Group) error {
-	err := g.doesGroupExist(group.ID)
+	err := g.doesGroupExist(group.Id)
 	if err != nil {
 		return err
 	}
 
 	err = g.db.
-		Where("groups.`created_by` = ? AND groups.id = ?", group.CreatedBy, group.ID).
+		Where("groups.`created_by` = ? AND groups.id = ?", group.CreatedBy, group.Id).
 		First(&models.Group{}).Error
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
@@ -109,7 +109,7 @@ func (g *groupController) DeleteGroup(group *models.Group) error {
 	uow := db.NewUnitOfWork(g.db)
 	defer uow.RollBack()
 
-	err = uow.DB.Unscoped().Delete(&models.Group{}, group.ID).Error
+	err = uow.DB.Unscoped().Delete(&models.Group{}, group.Id).Error
 	if err != nil {
 		return err
 	}

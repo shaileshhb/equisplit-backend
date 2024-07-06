@@ -78,7 +78,7 @@ func (u *userController) Login(user *models.User) error {
 		return errors.New("email or password did not match")
 	}
 
-	user.ID = tempUser.ID
+	user.Id = tempUser.Id
 	user.Name = tempUser.Name
 
 	return nil
@@ -118,7 +118,7 @@ func (u *userController) validateUser(user *models.User) error {
 	var count int64 = 0
 	err := u.db.Model(&models.User{}).
 		Select("COUNT(DISTINCT(id))").
-		Where("users.id != ? AND users.email = ?", user.ID, user.Email).
+		Where("users.id != ? AND users.email = ?", user.Id, user.Email).
 		Unscoped().
 		Count(&count).Error
 	if err != nil {

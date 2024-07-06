@@ -58,7 +58,7 @@ func (u *userInvitationRouter) add(c *fiber.Ctx) error {
 
 	userInterface := c.Locals("user")
 	user := userInterface.(*models.User)
-	userInvitation.InvitedBy = &user.ID
+	userInvitation.InvitedBy = &user.Id
 
 	err = u.con.Add(&userInvitation)
 	if err != nil {
@@ -83,7 +83,7 @@ func (u *userInvitationRouter) updateInvitation(c *fiber.Ctx) error {
 		})
 	}
 
-	userInvitation.ID, err = uuid.Parse(c.Params("userInvitationId"))
+	userInvitation.Id, err = uuid.Parse(c.Params("userInvitationId"))
 	if err != nil {
 		u.log.Error().Err(err).Msg("")
 		return c.Status(http.StatusBadRequest).JSON(fiber.Map{
@@ -114,7 +114,7 @@ func (u *userInvitationRouter) deleteInvitation(c *fiber.Ctx) error {
 		})
 	}
 
-	userInvitation.ID, err = uuid.Parse(c.Params("userInvitationId"))
+	userInvitation.Id, err = uuid.Parse(c.Params("userInvitationId"))
 	if err != nil {
 		u.log.Error().Err(err).Msg("")
 		return c.Status(http.StatusBadRequest).JSON(fiber.Map{

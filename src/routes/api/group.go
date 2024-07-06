@@ -97,7 +97,7 @@ func (g *groupRouter) updateGroup(c *fiber.Ctx) error {
 		})
 	}
 
-	group.ID, err = uuid.Parse(c.Params("groupId"))
+	group.Id, err = uuid.Parse(c.Params("groupId"))
 	if err != nil {
 		g.log.Error().Err(err).Msg("")
 		return c.Status(http.StatusBadRequest).JSON(fiber.Map{
@@ -128,7 +128,7 @@ func (g *groupRouter) deleteGroup(c *fiber.Ctx) error {
 		})
 	}
 
-	group.ID, err = uuid.Parse(c.Params("groupId", "0"))
+	group.Id, err = uuid.Parse(c.Params("groupId", "0"))
 	if err != nil {
 		g.log.Error().Err(err).Msg("")
 		return c.Status(http.StatusBadRequest).JSON(fiber.Map{

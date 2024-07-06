@@ -16,6 +16,7 @@ type GroupTransactionController interface {
 	Add(*models.GroupTransaction, ...*db.UnitOfWork) error
 	AddMulitple(transaction *[]models.GroupTransaction) error
 	MarkTransactionPaid(*models.GroupTransaction, uuid.UUID) error
+	GetTransactionDetails(userBalance *[]models.UserBalance, userId, groupId uuid.UUID) error
 	Delete(userId, transactionId uuid.UUID) error
 }
 
@@ -102,8 +103,8 @@ func (g *groupTransactionController) setUserIncomingAmount(uow *db.UnitOfWork, t
 	payerAmount.PayerId = transaction.PayerId
 
 	// set incoming for payer
-	err := uow.DB.Select("payer_id, sum(amount) AS amount").Where("payer_id = ? AND is_paid = ?",
-		transaction.PayerId, false).Group("payer_id").Find(&models.GroupTransaction{}).Scan(&payerAmount).Error
+	err := uow.DB.Select("payer_id, sum(amount) AS amount").Where("payer_id = ? AND is_paid = ? AND is_adjusted = ?",
+		transaction.PayerId, false, false).Group("payer_id").Find(&models.GroupTransaction{}).Scan(&payerAmount).Error
 	if err != nil && err != gorm.ErrRecordNotFound {
 		return err
 	}
@@ -122,8 +123,8 @@ func (g *groupTransactionController) setUserIncomingAmount(uow *db.UnitOfWork, t
 	payerAmount.PayerId = transaction.PayeeId
 
 	// set incoming for payee
-	err = uow.DB.Select("payer_id, sum(amount) AS amount").Where("payer_id = ? AND is_paid = ?",
-		transaction.PayeeId, false).Group("payer_id").Find(&models.GroupTransaction{}).
+	err = uow.DB.Select("payer_id, sum(amount) AS amount").Where("payer_id = ? AND is_paid = ? AND is_adjusted = ?",
+		transaction.PayeeId, false, false).Group("payer_id").Find(&models.GroupTransaction{}).
 		Scan(&payerAmount).Error
 	if err != nil && err != gorm.ErrRecordNotFound {
 		return err
@@ -152,8 +153,8 @@ func (g *groupTransactionController) setUserOutgoingAmount(uow *db.UnitOfWork, t
 	payeeAmount.PayeeId = transaction.PayerId
 
 	// set outcoming for payer
-	err := uow.DB.Select("payee_id, sum(amount)").Where("payee_id = ? AND is_paid = ?",
-		transaction.PayerId, false).Group("payee_id").Find(&models.GroupTransaction{}).
+	err := uow.DB.Select("payee_id, sum(amount)").Where("payee_id = ? AND is_paid = ? AND is_adjusted = ?",
+		transaction.PayerId, false, false).Group("payee_id").Find(&models.GroupTransaction{}).
 		Scan(&payeeAmount).Error
 	if err != nil && err != gorm.ErrRecordNotFound {
 		return err
@@ -173,8 +174,8 @@ func (g *groupTransactionController) setUserOutgoingAmount(uow *db.UnitOfWork, t
 	payeeAmount.PayeeId = transaction.PayeeId
 
 	// set incoming for payee
-	err = uow.DB.Select("payee_id, sum(amount) AS amount").Where("payee_id = ? AND is_paid = ?",
-		transaction.PayeeId, false).Group("payee_id").Find(&models.GroupTransaction{}).
+	err = uow.DB.Select("payee_id, sum(amount) AS amount").Where("payee_id = ? AND is_paid = ? AND is_adjusted = ?",
+		transaction.PayeeId, false, false).Group("payee_id").Find(&models.GroupTransaction{}).
 		Scan(&payeeAmount).Error
 	if err != nil && err != gorm.ErrRecordNotFound {
 		return err
@@ -213,7 +214,7 @@ func (g *groupTransactionController) AddMulitple(transaction *[]models.GroupTran
 // MarkTransactionPaid will mark the transaction has paid
 func (g *groupTransactionController) MarkTransactionPaid(transaction *models.GroupTransaction, payeeId uuid.UUID) error {
 
-	err := g.doesGroupTransactionExist(transaction.ID)
+	err := g.doesGroupTransactionExist(transaction.Id)
 	if err != nil {
 		return err
 	}
@@ -221,7 +222,7 @@ func (g *groupTransactionController) MarkTransactionPaid(transaction *models.Gro
 	uow := db.NewUnitOfWork(g.db)
 	defer uow.RollBack()
 
-	err = uow.DB.Where("id = ? AND payee_id = ?", transaction.ID, payeeId).
+	err = uow.DB.Where("id = ? AND payee_id = ?", transaction.Id, payeeId).
 		First(&models.GroupTransaction{}).Error
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
@@ -230,7 +231,7 @@ func (g *groupTransactionController) MarkTransactionPaid(transaction *models.Gro
 		return err
 	}
 
-	err = uow.DB.Model(&models.GroupTransaction{}).Where("group_transactions.id = ?", transaction.ID).
+	err = uow.DB.Model(&models.GroupTransaction{}).Where("group_transactions.id = ?", transaction.Id).
 		Updates(map[string]interface{}{
 			"IsPaid": true,
 		}).Error
@@ -238,7 +239,7 @@ func (g *groupTransactionController) MarkTransactionPaid(transaction *models.Gro
 		return err
 	}
 
-	err = uow.DB.Model(&models.GroupTransaction{}).Where("id = ?", transaction.ID).
+	err = uow.DB.Model(&models.GroupTransaction{}).Where("id = ?", transaction.Id).
 		First(&transaction).Error
 	if err != nil {
 		return err
@@ -252,6 +253,27 @@ func (g *groupTransactionController) MarkTransactionPaid(transaction *models.Gro
 
 	// updates payees outgoing amount.
 	err = g.setUserOutgoingAmount(uow, transaction)
+	if err != nil {
+		return err
+	}
+
+	uow.Commit()
+	return nil
+}
+
+// GetTransactionDetails will fetch amount to be fetched from all users for specified group
+func (g *groupTransactionController) GetTransactionDetails(userBalance *[]models.UserBalance, userId, groupId uuid.UUID) error {
+	err := g.doesUserExist(userId)
+	if err != nil {
+		return err
+	}
+
+	uow := db.NewUnitOfWork(g.db)
+	defer uow.RollBack()
+
+	err = uow.DB.Select("payee_id AS user_id, group_id, sum(amount) AS amount").Table("group_transactions").
+		Preload("User").Where("payer_id = ? AND group_id = ? AND is_paid = ? AND is_adjusted = ?",
+		userId, groupId, false, false).Group("payee_id, group_id").Order("amount").Find(userBalance).Error
 	if err != nil {
 		return err
 	}
@@ -276,11 +298,11 @@ func (g *groupTransactionController) Delete(userId, transactionId uuid.UUID) err
 	uow := db.NewUnitOfWork(g.db)
 	defer uow.RollBack()
 
-	err = uow.DB.Model(&models.GroupTransaction{}).Where("group_transactions.id = ? AND group_transactions.payee_id = ?", transactionId, userId).
+	err = uow.DB.Model(&models.GroupTransaction{}).Where("group_transactions.id = ? AND group_transactions.payer_id = ?", transactionId, userId).
 		First(&models.GroupTransaction{}).Error
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
-			return errors.New("only payee can delete a transaction")
+			return errors.New("only payer can delete a transaction")
 		}
 		return err
 	}

@@ -13,7 +13,7 @@ var JWT_KEY = "this is a sample key, should change in prod"
 
 func GenerateJWT(user *models.User) (string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"sub": user.ID,
+		"sub": user.Id,
 		"iat": jwt.NewNumericDate(time.Now()),
 		"exp": jwt.NewNumericDate(time.Now().Add(time.Hour * 24 * 7)), // 7 days
 	})
@@ -41,7 +41,7 @@ func ValidateJWT(t string) (*models.User, error) {
 
 	return &models.User{
 		Base: models.Base{
-			ID: userId,
+			Id: userId,
 		},
 	}, nil
 }

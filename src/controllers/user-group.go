@@ -73,7 +73,7 @@ func (u *userGroupController) AddUserToGroup(userGroup *models.UserGroup) error 
 // DeleteUserFromGroup will delete specified user from the group.
 func (u *userGroupController) DeleteUserFromGroup(userGroup *models.UserGroup) error {
 
-	err := u.doesUserGroupExist(userGroup.ID)
+	err := u.doesUserGroupExist(userGroup.Id)
 	if err != nil {
 		return err
 	}

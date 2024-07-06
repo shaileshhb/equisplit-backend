@@ -20,6 +20,19 @@ services:
     ports:
       - "5432:5432"
 
+  pgadmin:
+    container_name: pgadmin
+    hostname: pgadmin
+    image: dpage/pgadmin4
+    restart: always
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@admin.com
+      PGADMIN_DEFAULT_PASSWORD: root
+    depends_on:
+      - postgres
+    ports:
+      - "5050:80"
+
   redis-cache:
     image: redis
     restart: always
@@ -28,6 +41,20 @@ services:
     # command: redis-server --save 20 1 --loglevel warning --requirepass equisplit
     volumes: 
       - cache:/data
+
+  # equisplit:
+  #   container_name: equisplit
+  #   build:
+  #     dockerfile: Dockerfile.dev
+  #   ports:
+  #     - "8080:8080"
+  #   expose:
+  #     - "8080"
+  #   depends_on:
+  #     postgres:
+  #       condition: service_healthy
+  #   links:
+  #     - postgres
 
   # equisplit:
   #   container_name: equisplit

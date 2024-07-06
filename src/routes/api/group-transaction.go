@@ -36,6 +36,7 @@ func NewGroupTransactionRouter(con controllers.GroupTransactionController, auth 
 // RegisterRoutes will register routes for user-group router.
 func (g *groupTransactionRouter) RegisterRoutes(router fiber.Router) {
 	router.Post("/group/:groupId<uuid>/transaction", g.auth.MandatoryAuthMiddleware, g.add)
+	router.Post("/group/:groupId<uuid>/transactions", g.auth.MandatoryAuthMiddleware, g.addMultiple)
 	router.Put("/transaction/:transactionId<uuid>", g.auth.MandatoryAuthMiddleware, g.markTransactionPaid)
 	router.Delete("/transaction/:transactionId<uuid>", g.auth.MandatoryAuthMiddleware, g.delete)
 	g.log.Info().Msg("GroupTransaction routes registered")
@@ -61,7 +62,19 @@ func (g *groupTransactionRouter) add(c *fiber.Ctx) error {
 		})
 	}
 
+	userInterface := c.Locals("user")
+	user := userInterface.(*models.User)
+
+	transaction.PayerId = user.ID
 	transaction.GroupId = id
+
+	err = transaction.Validate()
+	if err != nil {
+		g.log.Error().Err(err).Msg("")
+		return c.Status(http.StatusBadRequest).JSON(fiber.Map{
+			"error": err.Error(),
+		})
+	}
 
 	err = g.con.Add(&transaction)
 	if err != nil {
@@ -74,13 +87,60 @@ func (g *groupTransactionRouter) add(c *fiber.Ctx) error {
 	return c.Status(http.StatusCreated).JSON(nil)
 }
 
+// addMultiple will add new transaction in specified group.
+func (g *groupTransactionRouter) addMultiple(c *fiber.Ctx) error {
+	transactions := []models.GroupTransaction{}
+
+	err := c.BodyParser(&transactions)
+	if err != nil {
+		g.log.Error().Err(err).Msg("")
+		return c.Status(http.StatusBadRequest).JSON(fiber.Map{
+			"error": err.Error(),
+		})
+	}
+
+	groupId, err := uuid.Parse(c.Params("groupId"))
+	if err != nil {
+		g.log.Error().Err(err).Msg("")
+		return c.Status(http.StatusBadRequest).JSON(fiber.Map{
+			"error": err.Error(),
+		})
+	}
+
+	userInterface := c.Locals("user")
+	user := userInterface.(*models.User)
+
+	for index := range transactions {
+		transactions[index].GroupId = groupId
+		transactions[index].PayerId = user.ID
+
+		err = transactions[index].Validate()
+		if err != nil {
+			g.log.Error().Err(err).Msg("")
+			return c.Status(http.StatusBadRequest).JSON(fiber.Map{
+				"error": err.Error(),
+			})
+		}
+	}
+
+	err = g.con.AddMulitple(&transactions)
+	if err != nil {
+		g.log.Error().Err(err).Msg("")
+		return c.Status(http.StatusBadRequest).JSON(fiber.Map{
+			"error": err.Error(),
+		})
+	}
+
+	return c.Status(http.StatusCreated).JSON(nil)
+}
+
 // markTransactionPaid will mark the transaction has paid
-func (u *groupTransactionRouter) markTransactionPaid(c *fiber.Ctx) error {
+func (g *groupTransactionRouter) markTransactionPaid(c *fiber.Ctx) error {
 	transaction := models.GroupTransaction{}
 
 	transactionId, err := uuid.Parse(c.Params("transactionId"))
 	if err != nil {
-		u.log.Error().Err(err).Msg("")
+		g.log.Error().Err(err).Msg("")
 		return c.Status(http.StatusBadRequest).JSON(fiber.Map{
 			"error": err.Error(),
 		})
@@ -90,10 +150,11 @@ func (u *groupTransactionRouter) markTransactionPaid(c *fiber.Ctx) error {
 
 	userInterface := c.Locals("user")
 	user := userInterface.(*models.User)
+	transaction.PayeeId = user.ID
 
-	err = u.con.MarkTransactionPaid(&transaction, user.ID)
+	err = g.con.MarkTransactionPaid(&transaction, user.ID)
 	if err != nil {
-		u.log.Error().Err(err).Msg("")
+		g.log.Error().Err(err).Msg("")
 		return c.Status(http.StatusBadRequest).JSON(fiber.Map{
 			"error": err.Error(),
 		})

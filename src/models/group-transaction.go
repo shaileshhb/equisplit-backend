@@ -1,6 +1,10 @@
 package models
 
-import "github.com/google/uuid"
+import (
+	"errors"
+
+	"github.com/google/uuid"
+)
 
 // Payer - Represents the user who has to transfer some amount.
 // Payee - Represents the user to whom the amount should be transferred.
@@ -21,4 +25,24 @@ type GroupTransaction struct {
 // TableName specifies name of the table for UserGroupHistory struct.
 func (*GroupTransaction) TableName() string {
 	return "group_transactions"
+}
+
+func (g *GroupTransaction) Validate() error {
+
+	if g.PayerId == uuid.Nil {
+		return errors.New("payer must be specified")
+	}
+
+	if g.PayeeId == uuid.Nil {
+		return errors.New("payee must be specified")
+	}
+
+	if g.GroupId == uuid.Nil {
+		return errors.New("group must be specified")
+	}
+
+	if g.Amount == 0 {
+		return errors.New("amount must be greater than zero")
+	}
+	return nil
 }

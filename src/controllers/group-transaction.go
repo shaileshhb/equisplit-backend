@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/google/uuid"
@@ -12,8 +13,9 @@ import (
 
 // GroupTransactionController will contain all methods to be implemented by userGroupHistory controller
 type GroupTransactionController interface {
-	Add(transaction *models.GroupTransaction) error
-	MarkTransactionPaid(transaction *models.GroupTransaction, payerId uuid.UUID) error
+	Add(*models.GroupTransaction, ...*db.UnitOfWork) error
+	AddMulitple(transaction *[]models.GroupTransaction) error
+	MarkTransactionPaid(*models.GroupTransaction, uuid.UUID) error
 	Delete(userId, transactionId uuid.UUID) error
 }
 
@@ -29,7 +31,8 @@ func NewGroupTransactionController(db *gorm.DB) GroupTransactionController {
 }
 
 // Add will add new transaction for specified group and user.
-func (g *groupTransactionController) Add(transaction *models.GroupTransaction) error {
+func (g *groupTransactionController) Add(transaction *models.GroupTransaction,
+	uows ...*db.UnitOfWork) error {
 
 	err := g.doesUserExist(transaction.PayeeId)
 	if err != nil {
@@ -56,12 +59,151 @@ func (g *groupTransactionController) Add(transaction *models.GroupTransaction) e
 		return err
 	}
 
-	uow := db.NewUnitOfWork(g.db)
-	defer uow.RollBack()
+	var uow *db.UnitOfWork
+
+	if len(uows) == 0 {
+		uow = db.NewUnitOfWork(g.db)
+		defer uow.RollBack()
+	} else {
+		uow = uows[0]
+	}
 
 	err = uow.DB.Create(transaction).Error
 	if err != nil {
 		return err
+	}
+
+	// updates payer incoming amount.
+	err = g.setUserIncomingAmount(uow, transaction)
+	if err != nil {
+		return err
+	}
+
+	// updates payees outgoing amount.
+	err = g.setUserOutgoingAmount(uow, transaction)
+	if err != nil {
+		return err
+	}
+
+	if len(uows) == 0 {
+		uow.Commit()
+	}
+
+	return nil
+}
+
+func (g *groupTransactionController) setUserIncomingAmount(uow *db.UnitOfWork, transaction *models.GroupTransaction) error {
+	fmt.Println("==================setUserIncomingAmount==============================")
+	payerAmount := struct {
+		Amount  float64
+		PayerId uuid.UUID
+	}{}
+
+	payerAmount.PayerId = transaction.PayerId
+
+	// set incoming for payer
+	err := uow.DB.Select("payer_id, sum(amount) AS amount").Where("payer_id = ? AND is_paid = ?",
+		transaction.PayerId, false).Group("payer_id").Find(&models.GroupTransaction{}).Scan(&payerAmount).Error
+	if err != nil && err != gorm.ErrRecordNotFound {
+		return err
+	}
+
+	if payerAmount.PayerId != uuid.Nil {
+		err = uow.DB.Model(&models.UserGroup{}).Where("user_id = ? AND group_id = ?", transaction.PayerId,
+			transaction.GroupId).Updates(map[string]interface{}{
+			"IncomingAmount": payerAmount.Amount,
+		}).Error
+		if err != nil {
+			return err
+		}
+	}
+
+	payerAmount.Amount = 0
+	payerAmount.PayerId = transaction.PayeeId
+
+	// set incoming for payee
+	err = uow.DB.Select("payer_id, sum(amount) AS amount").Where("payer_id = ? AND is_paid = ?",
+		transaction.PayeeId, false).Group("payer_id").Find(&models.GroupTransaction{}).
+		Scan(&payerAmount).Error
+	if err != nil && err != gorm.ErrRecordNotFound {
+		return err
+	}
+
+	if payerAmount.PayerId != uuid.Nil {
+		err = uow.DB.Model(&models.UserGroup{}).Where("user_id = ? AND group_id = ?", transaction.PayeeId,
+			transaction.GroupId).Updates(map[string]interface{}{
+			"IncomingAmount": payerAmount.Amount,
+		}).Error
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (g *groupTransactionController) setUserOutgoingAmount(uow *db.UnitOfWork, transaction *models.GroupTransaction) error {
+	fmt.Println("==================setUserOutgoingAmount==============================")
+	payeeAmount := struct {
+		Amount  float64
+		PayeeId uuid.UUID
+	}{}
+
+	payeeAmount.PayeeId = transaction.PayerId
+
+	// set outcoming for payer
+	err := uow.DB.Select("payee_id, sum(amount)").Where("payee_id = ? AND is_paid = ?",
+		transaction.PayerId, false).Group("payee_id").Find(&models.GroupTransaction{}).
+		Scan(&payeeAmount).Error
+	if err != nil && err != gorm.ErrRecordNotFound {
+		return err
+	}
+
+	if payeeAmount.PayeeId != uuid.Nil {
+		err = uow.DB.Model(&models.UserGroup{}).Where("user_id = ? AND group_id = ?", transaction.PayerId,
+			transaction.GroupId).Updates(map[string]interface{}{
+			"OutgoingAmount": payeeAmount.Amount,
+		}).Error
+		if err != nil {
+			return err
+		}
+	}
+
+	payeeAmount.Amount = 0
+	payeeAmount.PayeeId = transaction.PayeeId
+
+	// set incoming for payee
+	err = uow.DB.Select("payee_id, sum(amount) AS amount").Where("payee_id = ? AND is_paid = ?",
+		transaction.PayeeId, false).Group("payee_id").Find(&models.GroupTransaction{}).
+		Scan(&payeeAmount).Error
+	if err != nil && err != gorm.ErrRecordNotFound {
+		return err
+	}
+
+	if payeeAmount.PayeeId != uuid.Nil {
+		err = uow.DB.Model(&models.UserGroup{}).Where("user_id = ? AND group_id = ?", transaction.PayeeId,
+			transaction.GroupId).Updates(map[string]interface{}{
+			"OutgoingAmount": payeeAmount.Amount,
+		}).Error
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+// AddMulitple will add new transaction for specified group.
+func (g *groupTransactionController) AddMulitple(transaction *[]models.GroupTransaction) error {
+
+	uow := db.NewUnitOfWork(g.db)
+	defer uow.RollBack()
+
+	for _, t := range *transaction {
+		err := g.Add(&t, uow)
+		if err != nil {
+			return err
+		}
 	}
 
 	uow.Commit()
@@ -69,7 +211,7 @@ func (g *groupTransactionController) Add(transaction *models.GroupTransaction) e
 }
 
 // MarkTransactionPaid will mark the transaction has paid
-func (g *groupTransactionController) MarkTransactionPaid(transaction *models.GroupTransaction, payerId uuid.UUID) error {
+func (g *groupTransactionController) MarkTransactionPaid(transaction *models.GroupTransaction, payeeId uuid.UUID) error {
 
 	err := g.doesGroupTransactionExist(transaction.ID)
 	if err != nil {
@@ -79,9 +221,12 @@ func (g *groupTransactionController) MarkTransactionPaid(transaction *models.Gro
 	uow := db.NewUnitOfWork(g.db)
 	defer uow.RollBack()
 
-	err = uow.DB.Where("id = ? AND payer_id = ?", transaction.ID, payerId).
+	err = uow.DB.Where("id = ? AND payee_id = ?", transaction.ID, payeeId).
 		First(&models.GroupTransaction{}).Error
 	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return errors.New("only payee can mark transaction as paid")
+		}
 		return err
 	}
 
@@ -89,6 +234,24 @@ func (g *groupTransactionController) MarkTransactionPaid(transaction *models.Gro
 		Updates(map[string]interface{}{
 			"IsPaid": true,
 		}).Error
+	if err != nil {
+		return err
+	}
+
+	err = uow.DB.Model(&models.GroupTransaction{}).Where("id = ?", transaction.ID).
+		First(&transaction).Error
+	if err != nil {
+		return err
+	}
+
+	// updates payer incoming amount.
+	err = g.setUserIncomingAmount(uow, transaction)
+	if err != nil {
+		return err
+	}
+
+	// updates payees outgoing amount.
+	err = g.setUserOutgoingAmount(uow, transaction)
 	if err != nil {
 		return err
 	}

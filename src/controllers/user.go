@@ -15,15 +15,20 @@ type UserController interface {
 	Login(user *models.User) error
 	GetUser(user *models.UserDTO) error
 	GetUsers(users *[]models.UserDTO, parser *util.Parser) error
+
+	// Testing
+	// Unlimited(ip string) error
 }
 
 type userController struct {
 	db *gorm.DB
+	// rdb *redis.Client
 }
 
 func NewUserController(db *gorm.DB) UserController {
 	return &userController{
 		db: db,
+		// rdb: rdb,
 	}
 }
 
@@ -113,7 +118,7 @@ func (u *userController) validateUser(user *models.User) error {
 	var count int64 = 0
 	err := u.db.Model(&models.User{}).
 		Select("COUNT(DISTINCT(id))").
-		Where("users.id != ? AND users.email = ?", user.ID, user.Email).
+		Where("users.`id` != ? AND users.`email` = ?", user.ID, user.Email).
 		Unscoped().
 		Count(&count).Error
 	if err != nil {

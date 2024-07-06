@@ -2,9 +2,9 @@ package api
 
 import (
 	"net/http"
-	"strconv"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/google/uuid"
 	"github.com/rs/zerolog"
 	"github.com/shaileshhb/equisplit/src/controllers"
 	"github.com/shaileshhb/equisplit/src/models"
@@ -55,15 +55,13 @@ func (u *userGroupRouter) addUserToGroup(c *fiber.Ctx) error {
 		})
 	}
 
-	id, err := strconv.Atoi(c.Params("groupId"))
+	userGroup.GroupId, err = uuid.Parse(c.Params("groupId"))
 	if err != nil {
 		u.log.Error().Err(err).Msg("")
 		return c.Status(http.StatusBadRequest).JSON(fiber.Map{
 			"error": err.Error(),
 		})
 	}
-
-	userGroup.GroupId = uint(id)
 
 	err = u.con.AddUserToGroup(&userGroup)
 	if err != nil {
@@ -80,7 +78,7 @@ func (u *userGroupRouter) addUserToGroup(c *fiber.Ctx) error {
 func (u *userGroupRouter) deleteUserFromGroup(c *fiber.Ctx) error {
 	userGroup := models.UserGroup{}
 
-	id, err := strconv.Atoi(c.Params("userGroupId"))
+	id, err := uuid.Parse(c.Params("userGroupId"))
 	if err != nil {
 		u.log.Error().Err(err).Msg("")
 		return c.Status(http.StatusBadRequest).JSON(fiber.Map{
@@ -88,7 +86,7 @@ func (u *userGroupRouter) deleteUserFromGroup(c *fiber.Ctx) error {
 		})
 	}
 
-	userGroup.ID = uint(id)
+	userGroup.ID = id
 
 	err = u.con.DeleteUserFromGroup(&userGroup)
 	if err != nil {
@@ -105,7 +103,7 @@ func (u *userGroupRouter) deleteUserFromGroup(c *fiber.Ctx) error {
 func (u *userGroupRouter) getGroupDetails(c *fiber.Ctx) error {
 	userGroups := []models.UserGroupDTO{}
 
-	groupId, err := strconv.Atoi(c.Params("groupId"))
+	groupId, err := uuid.Parse(c.Params("groupId"))
 	if err != nil {
 		u.log.Error().Err(err).Msg("")
 		return c.Status(http.StatusBadRequest).JSON(fiber.Map{
@@ -116,7 +114,7 @@ func (u *userGroupRouter) getGroupDetails(c *fiber.Ctx) error {
 	userInterface := c.Locals("user")
 	user := userInterface.(*models.User)
 
-	err = u.con.GetGroupDetails(&userGroups, uint(groupId), user.ID)
+	err = u.con.GetGroupDetails(&userGroups, groupId, user.ID)
 	if err != nil {
 		u.log.Error().Err(err).Msg("")
 		return c.Status(http.StatusBadRequest).JSON(fiber.Map{
@@ -131,7 +129,7 @@ func (u *userGroupRouter) getGroupDetails(c *fiber.Ctx) error {
 func (u *userGroupRouter) getUserGroups(c *fiber.Ctx) error {
 	userGroups := []models.UserGroupDTO{}
 
-	userId, err := strconv.Atoi(c.Params("userId"))
+	userId, err := uuid.Parse(c.Params("userId"))
 	if err != nil {
 		u.log.Error().Err(err).Msg("")
 		return c.Status(http.StatusBadRequest).JSON(fiber.Map{
@@ -139,7 +137,7 @@ func (u *userGroupRouter) getUserGroups(c *fiber.Ctx) error {
 		})
 	}
 
-	err = u.con.GetUserGroups(&userGroups, uint(userId))
+	err = u.con.GetUserGroups(&userGroups, userId)
 	if err != nil {
 		u.log.Error().Err(err).Msg("")
 		return c.Status(http.StatusBadRequest).JSON(fiber.Map{

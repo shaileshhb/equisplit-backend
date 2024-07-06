@@ -1,5 +1,10 @@
 package models
 
+import (
+	"errors"
+	"strings"
+)
+
 // User db entity
 type User struct {
 	Base
@@ -10,6 +15,21 @@ type User struct {
 
 func (*User) TableName() string {
 	return "users"
+}
+
+func (u *User) ValidateUser() error {
+	u.Name = strings.TrimSpace(u.Name)
+	u.Email = strings.TrimSpace(u.Email)
+
+	if u.Name == "" {
+		return errors.New("name must be specified")
+	}
+
+	if u.Email == "" {
+		return errors.New("email must be specified")
+	}
+
+	return nil
 }
 
 // User db entity

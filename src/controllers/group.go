@@ -3,6 +3,7 @@ package controllers
 import (
 	"errors"
 
+	"github.com/google/uuid"
 	"github.com/shaileshhb/equisplit/src/db"
 	"github.com/shaileshhb/equisplit/src/models"
 	"github.com/shaileshhb/equisplit/src/util"
@@ -13,7 +14,7 @@ type GroupController interface {
 	CreateGroup(group *models.Group) error
 	UpdateGroup(group *models.Group) error
 	DeleteGroup(group *models.Group) error
-	GetUserGroups(group *[]models.Group, userId uint, totalCount *int64, parser *util.Parser) error
+	GetUserGroups(group *[]models.Group, userId uuid.UUID, totalCount *int64, parser *util.Parser) error
 }
 
 type groupController struct {
@@ -118,7 +119,7 @@ func (g *groupController) DeleteGroup(group *models.Group) error {
 }
 
 // GetUserGroups will fetch all groups for specified userId.
-func (g *groupController) GetUserGroups(groups *[]models.Group, userId uint, totalCount *int64, parser *util.Parser) error {
+func (g *groupController) GetUserGroups(groups *[]models.Group, userId uuid.UUID, totalCount *int64, parser *util.Parser) error {
 
 	err := g.doesUserExist(userId)
 	if err != nil {
@@ -147,7 +148,7 @@ func (g *groupController) GetUserGroups(groups *[]models.Group, userId uint, tot
 }
 
 // getUserGroupCount will fetch count of groups created by a specific user.
-func (g *groupController) getUserGroupCount(uow *db.UnitOfWork, userId uint, totalCount *int64) error {
+func (g *groupController) getUserGroupCount(uow *db.UnitOfWork, userId uuid.UUID, totalCount *int64) error {
 	err := uow.DB.Model(&models.Group{}).
 		Select("COUNT(groups.id)").
 		Where("groups.created_by = ?", userId).
@@ -160,7 +161,7 @@ func (g *groupController) getUserGroupCount(uow *db.UnitOfWork, userId uint, tot
 }
 
 // doesUserExist will check if specified user exist or not.
-func (g *groupController) doesUserExist(userId uint) error {
+func (g *groupController) doesUserExist(userId uuid.UUID) error {
 	err := g.db.Where("users.id = ?", userId).First(&models.User{}).Error
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
@@ -172,7 +173,7 @@ func (g *groupController) doesUserExist(userId uint) error {
 }
 
 // doesGroupExist will check if specified group exist or not.
-func (g *groupController) doesGroupExist(groupId uint) error {
+func (g *groupController) doesGroupExist(groupId uuid.UUID) error {
 	err := g.db.Where("groups.id = ?", groupId).First(&models.Group{}).Error
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {

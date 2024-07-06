@@ -4,6 +4,7 @@ import (
 	"errors"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/shaileshhb/equisplit/src/db"
 	"github.com/shaileshhb/equisplit/src/models"
 	"gorm.io/gorm"
@@ -12,8 +13,8 @@ import (
 // GroupTransactionController will contain all methods to be implemented by userGroupHistory controller
 type GroupTransactionController interface {
 	Add(transaction *models.GroupTransaction) error
-	MarkTransactionPaid(transaction *models.GroupTransaction, payerId uint) error
-	Delete(userId, transactionId uint) error
+	MarkTransactionPaid(transaction *models.GroupTransaction, payerId uuid.UUID) error
+	Delete(userId, transactionId uuid.UUID) error
 }
 
 type groupTransactionController struct {
@@ -68,7 +69,7 @@ func (g *groupTransactionController) Add(transaction *models.GroupTransaction) e
 }
 
 // MarkTransactionPaid will mark the transaction has paid
-func (g *groupTransactionController) MarkTransactionPaid(transaction *models.GroupTransaction, payerId uint) error {
+func (g *groupTransactionController) MarkTransactionPaid(transaction *models.GroupTransaction, payerId uuid.UUID) error {
 
 	err := g.doesGroupTransactionExist(transaction.ID)
 	if err != nil {
@@ -97,7 +98,7 @@ func (g *groupTransactionController) MarkTransactionPaid(transaction *models.Gro
 }
 
 // Delete will delete specified transaction
-func (g *groupTransactionController) Delete(userId, transactionId uint) error {
+func (g *groupTransactionController) Delete(userId, transactionId uuid.UUID) error {
 
 	err := g.doesUserExist(userId)
 	if err != nil {
@@ -134,7 +135,7 @@ func (g *groupTransactionController) Delete(userId, transactionId uint) error {
 }
 
 // doesUserExist will check if specified user exist or not.
-func (g *groupTransactionController) doesUserExist(userId uint) error {
+func (g *groupTransactionController) doesUserExist(userId uuid.UUID) error {
 	err := g.db.Where("users.id = ?", userId).First(&models.User{}).Error
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
@@ -146,7 +147,7 @@ func (g *groupTransactionController) doesUserExist(userId uint) error {
 }
 
 // doesGroupExist will check if specified group exist or not.
-func (g *groupTransactionController) doesGroupExist(groupId uint) error {
+func (g *groupTransactionController) doesGroupExist(groupId uuid.UUID) error {
 	err := g.db.Where("groups.id = ?", groupId).First(&models.Group{}).Error
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
@@ -158,7 +159,7 @@ func (g *groupTransactionController) doesGroupExist(groupId uint) error {
 }
 
 // doesUserExistInGroup will check if specified user exist or not.
-func (g *groupTransactionController) doesUserExistInGroup(userId, groupId uint) error {
+func (g *groupTransactionController) doesUserExistInGroup(userId, groupId uuid.UUID) error {
 	err := g.db.Where("user_groups.user_id = ? AND user_groups.group_id = ?", userId, groupId).
 		First(&models.UserGroup{}).Error
 	if err != nil {
@@ -171,7 +172,7 @@ func (g *groupTransactionController) doesUserExistInGroup(userId, groupId uint) 
 }
 
 // doesGroupTransactionExist will check if specified group exist or not.
-func (g *groupTransactionController) doesGroupTransactionExist(transactionId uint) error {
+func (g *groupTransactionController) doesGroupTransactionExist(transactionId uuid.UUID) error {
 	err := g.db.Where("group_transactions.id = ?", transactionId).First(&models.GroupTransaction{}).Error
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {

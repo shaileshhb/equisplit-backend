@@ -4,6 +4,7 @@ import (
 	"errors"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/shaileshhb/equisplit/src/db"
 	"github.com/shaileshhb/equisplit/src/models"
 	"gorm.io/gorm"
@@ -54,7 +55,7 @@ func (ui *userInvitationController) Add(invitation *models.UserInvitation) error
 		return err
 	}
 
-	if tempInvitation.ID > 0 {
+	if tempInvitation.ID != uuid.Nil {
 		return errors.New("user already invited")
 	}
 
@@ -72,7 +73,7 @@ func (ui *userInvitationController) Add(invitation *models.UserInvitation) error
 }
 
 // doesUserExist will check if specified user exist or not.
-func (u *userInvitationController) doesUserExist(userId uint) error {
+func (u *userInvitationController) doesUserExist(userId uuid.UUID) error {
 	err := u.db.Where("users.id = ?", userId).First(&models.User{}).Error
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
@@ -84,7 +85,7 @@ func (u *userInvitationController) doesUserExist(userId uint) error {
 }
 
 // doesGroupExist will check if specified group exist or not.
-func (u *userInvitationController) doesGroupExist(groupId uint) error {
+func (u *userInvitationController) doesGroupExist(groupId uuid.UUID) error {
 	err := u.db.Where("groups.id = ?", groupId).First(&models.Group{}).Error
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
@@ -96,7 +97,7 @@ func (u *userInvitationController) doesGroupExist(groupId uint) error {
 }
 
 // doesUserGroupExist will check if specified user_group exist or not.
-func (u *userInvitationController) doesUserGroupExist(userId, groupId uint) error {
+func (u *userInvitationController) doesUserGroupExist(userId, groupId uuid.UUID) error {
 	var totalCount int64 = 0
 	err := u.db.Model(&models.UserGroup{}).Where("user_groups.user_id = ? AND user_groups.group_id = ?", userId, groupId).
 		Count(&totalCount).Error

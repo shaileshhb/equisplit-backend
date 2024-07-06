@@ -2,9 +2,9 @@ package api
 
 import (
 	"net/http"
-	"strconv"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/google/uuid"
 	"github.com/rs/zerolog"
 	"github.com/shaileshhb/equisplit/src/controllers"
 	"github.com/shaileshhb/equisplit/src/models"
@@ -53,7 +53,7 @@ func (g *groupTransactionRouter) add(c *fiber.Ctx) error {
 		})
 	}
 
-	id, err := strconv.Atoi(c.Params("groupId"))
+	id, err := uuid.Parse(c.Params("groupId"))
 	if err != nil {
 		g.log.Error().Err(err).Msg("")
 		return c.Status(http.StatusBadRequest).JSON(fiber.Map{
@@ -61,7 +61,7 @@ func (g *groupTransactionRouter) add(c *fiber.Ctx) error {
 		})
 	}
 
-	transaction.GroupId = uint(id)
+	transaction.GroupId = id
 
 	err = g.con.Add(&transaction)
 	if err != nil {
@@ -78,7 +78,7 @@ func (g *groupTransactionRouter) add(c *fiber.Ctx) error {
 func (u *groupTransactionRouter) markTransactionPaid(c *fiber.Ctx) error {
 	transaction := models.GroupTransaction{}
 
-	transactionId, err := strconv.Atoi(c.Params("transactionId"))
+	transactionId, err := uuid.Parse(c.Params("transactionId"))
 	if err != nil {
 		u.log.Error().Err(err).Msg("")
 		return c.Status(http.StatusBadRequest).JSON(fiber.Map{
@@ -86,7 +86,7 @@ func (u *groupTransactionRouter) markTransactionPaid(c *fiber.Ctx) error {
 		})
 	}
 
-	transaction.ID = uint(transactionId)
+	transaction.ID = transactionId
 
 	userInterface := c.Locals("user")
 	user := userInterface.(*models.User)
@@ -105,7 +105,7 @@ func (u *groupTransactionRouter) markTransactionPaid(c *fiber.Ctx) error {
 // delete will delete specified user from group
 func (u *groupTransactionRouter) delete(c *fiber.Ctx) error {
 
-	transactionId, err := strconv.Atoi(c.Params("transactionId"))
+	transactionId, err := uuid.Parse(c.Params("transactionId"))
 	if err != nil {
 		u.log.Error().Err(err).Msg("")
 		return c.Status(http.StatusBadRequest).JSON(fiber.Map{
@@ -116,7 +116,7 @@ func (u *groupTransactionRouter) delete(c *fiber.Ctx) error {
 	userInterface := c.Locals("user")
 	user := userInterface.(*models.User)
 
-	err = u.con.Delete(uint(user.ID), uint(transactionId))
+	err = u.con.Delete(user.ID, transactionId)
 	if err != nil {
 		u.log.Error().Err(err).Msg("")
 		return c.Status(http.StatusBadRequest).JSON(fiber.Map{

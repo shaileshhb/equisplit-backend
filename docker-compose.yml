@@ -20,16 +20,29 @@ services:
     ports:
       - "5432:5432"
 
-  equisplit:
-    container_name: equisplit
-    build:
-      dockerfile: Dockerfile.dev
+  redis-cache:
+    image: redis
+    restart: always
     ports:
-      - "8080:8080"
-    expose:
-      - "8080"
-    depends_on:
-      postgres:
-        condition: service_healthy
-    links:
-      - postgres
+      - '6379:6379'
+    # command: redis-server --save 20 1 --loglevel warning --requirepass equisplit
+    volumes: 
+      - cache:/data
+
+  # equisplit:
+  #   container_name: equisplit
+  #   build:
+  #     dockerfile: Dockerfile.dev
+  #   ports:
+  #     - "8080:8080"
+  #   expose:
+  #     - "8080"
+  #   depends_on:
+  #     postgres:
+  #       condition: service_healthy
+  #   links:
+  #     - postgres
+
+volumes:
+  cache:
+    driver: local

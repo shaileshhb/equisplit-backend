@@ -18,6 +18,8 @@ func main() {
 
 	// Initialize the database
 	database := db.InitDB()
+	// rdb := db.InitCache()
+	// defer rdb.Close()
 	var wg sync.WaitGroup
 
 	auth := security.NewAuthentication(logger)

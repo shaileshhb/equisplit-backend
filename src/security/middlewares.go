@@ -10,12 +10,14 @@ import (
 )
 
 type Authentication struct {
+	// rdb                     *redis.Client
 	log                     zerolog.Logger
 	authorizationTypeBearer string
 }
 
 func NewAuthentication(log zerolog.Logger) Authentication {
 	return Authentication{
+		// rdb:                     rdb,
 		log:                     log,
 		authorizationTypeBearer: "bearer",
 	}

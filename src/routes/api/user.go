@@ -1,10 +1,11 @@
 package api
 
 import (
+	"fmt"
 	"net/http"
-	"strconv"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/google/uuid"
 	"github.com/rs/zerolog"
 	"github.com/shaileshhb/equisplit/src/controllers"
 	"github.com/shaileshhb/equisplit/src/models"
@@ -44,7 +45,28 @@ func (u *userRouter) RegisterRoutes(router fiber.Router) {
 	router.Get("/user/:userId<int>", u.auth.MandatoryAuthMiddleware, u.getUser)
 	router.Get("/user", u.auth.MandatoryAuthMiddleware, u.getUsers)
 
+	// router.Get("/unlimited", u.auth.TokenBucketRateLimiter, u.unlimited)
+	router.Get("/limited", u.limited)
+
 	u.log.Info().Msg("User routes registered")
+}
+
+func (u *userRouter) unlimited(c *fiber.Ctx) error {
+	fmt.Println(c.Hostname(), c.IP())
+
+	// err := u.con.Unlimited(c.IP())
+	// if err != nil {
+	// 	u.log.Error().Err(err).Msg("")
+	// 	return c.Status(http.StatusBadRequest).JSON(fiber.Map{
+	// 		"error": err.Error(),
+	// 	})
+	// }
+
+	return c.Status(http.StatusCreated).JSON("Unlimited")
+}
+
+func (u *userRouter) limited(c *fiber.Ctx) error {
+	return c.Status(http.StatusCreated).JSON("Limited")
 }
 
 // register will add user.
@@ -141,7 +163,7 @@ func (u *userRouter) login(c *fiber.Ctx) error {
 func (u *userRouter) getUser(c *fiber.Ctx) error {
 	user := models.UserDTO{}
 
-	userId, err := strconv.Atoi(c.Params("userId"))
+	userId, err := uuid.Parse(c.Params("userId"))
 	if err != nil {
 		u.log.Error().Err(err).Msg("")
 		return c.Status(http.StatusBadRequest).JSON(fiber.Map{
@@ -149,7 +171,7 @@ func (u *userRouter) getUser(c *fiber.Ctx) error {
 		})
 	}
 
-	user.ID = uint(userId)
+	user.ID = userId
 
 	err = u.con.GetUser(&user)
 	if err != nil {

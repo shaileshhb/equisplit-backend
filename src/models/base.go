@@ -3,12 +3,13 @@ package models
 import (
 	"time"
 
+	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
 
 // Base for all models.
 type Base struct {
-	ID        uint           `json:"id" gorm:"primarykey;autoIncrement"`
+	ID        uuid.UUID      `json:"id" gorm:"primarykey"`
 	CreatedAt time.Time      `json:"createdAt"`
 	UpdatedAt time.Time      `json:"-"`
 	DeletedAt gorm.DeletedAt `json:"-"`
@@ -16,7 +17,7 @@ type Base struct {
 
 // BaseDTO for all models.
 type BaseDTO struct {
-	ID        uint           `json:"id" gorm:"primarykey;autoIncrement"`
+	ID        uuid.UUID      `json:"id" gorm:"primarykey"`
 	CreatedAt time.Time      `json:"createdAt"`
 	DeletedAt gorm.DeletedAt `json:"-"`
 }

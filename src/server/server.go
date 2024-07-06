@@ -23,8 +23,9 @@ type ModuleConfig interface {
 
 // Server Struct For Start the equisplit service.
 type Server struct {
-	Name   string
-	DB     *gorm.DB
+	Name string
+	DB   *gorm.DB
+	// RDB    *redis.Client
 	App    *fiber.App
 	Router fiber.Router
 	WG     *sync.WaitGroup
@@ -37,6 +38,7 @@ func NewServer(name string, db *gorm.DB, log zerolog.Logger, auth security.Authe
 	return &Server{
 		Name: name,
 		DB:   db,
+		// RDB:  rdb,
 		WG:   wg,
 		Auth: auth,
 		Log:  log,

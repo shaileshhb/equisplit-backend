@@ -2,9 +2,9 @@ package api
 
 import (
 	"net/http"
-	"strconv"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/google/uuid"
 	"github.com/rs/zerolog"
 	"github.com/shaileshhb/equisplit/src/controllers"
 	"github.com/shaileshhb/equisplit/src/models"
@@ -83,15 +83,13 @@ func (u *userInvitationRouter) updateInvitation(c *fiber.Ctx) error {
 		})
 	}
 
-	id, err := strconv.Atoi(c.Params("groupId"))
+	userInvitation.ID, err = uuid.Parse(c.Params("userInvitationId"))
 	if err != nil {
 		u.log.Error().Err(err).Msg("")
 		return c.Status(http.StatusBadRequest).JSON(fiber.Map{
 			"error": err.Error(),
 		})
 	}
-
-	userInvitation.ID = uint(id)
 
 	err = u.con.UpdateInvitation(&userInvitation)
 	if err != nil {
@@ -116,15 +114,13 @@ func (u *userInvitationRouter) deleteInvitation(c *fiber.Ctx) error {
 		})
 	}
 
-	id, err := strconv.Atoi(c.Params("userInvitationId"))
+	userInvitation.ID, err = uuid.Parse(c.Params("userInvitationId"))
 	if err != nil {
 		u.log.Error().Err(err).Msg("")
 		return c.Status(http.StatusBadRequest).JSON(fiber.Map{
 			"error": err.Error(),
 		})
 	}
-
-	userInvitation.ID = uint(id)
 
 	err = u.con.DeleteInvitation(&userInvitation)
 	if err != nil {
@@ -141,7 +137,7 @@ func (u *userInvitationRouter) deleteInvitation(c *fiber.Ctx) error {
 func (u *userInvitationRouter) getGroupInvitation(c *fiber.Ctx) error {
 	userInvitation := []models.UserInvitation{}
 
-	groupId, err := strconv.Atoi(c.Params("groupId"))
+	groupId, err := uuid.Parse(c.Params("groupId"))
 	if err != nil {
 		u.log.Error().Err(err).Msg("")
 		return c.Status(http.StatusBadRequest).JSON(fiber.Map{
@@ -149,7 +145,7 @@ func (u *userInvitationRouter) getGroupInvitation(c *fiber.Ctx) error {
 		})
 	}
 
-	err = u.con.GetGroupInvitation(&userInvitation, uint(groupId))
+	err = u.con.GetGroupInvitation(&userInvitation, groupId)
 	if err != nil {
 		u.log.Error().Err(err).Msg("")
 		return c.Status(http.StatusBadRequest).JSON(fiber.Map{

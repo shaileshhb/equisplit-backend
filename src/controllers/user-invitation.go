@@ -14,7 +14,7 @@ type UserInvitationController interface {
 	Add(invitation *models.UserInvitation) error
 	UpdateInvitation(invitation *models.UserInvitation) error
 	DeleteInvitation(invitation *models.UserInvitation) error
-	GetGroupInvitation(invitations *[]models.UserInvitation, groupId uint) error
+	GetGroupInvitation(invitations *[]models.UserInvitation, groupId uuid.UUID) error
 }
 
 type userInvitationController struct {
@@ -118,7 +118,7 @@ func (ui *userInvitationController) UpdateInvitation(invitation *models.UserInvi
 }
 
 // GetGroupInvitation will fetch all invitations of specified group.
-func (ui *userInvitationController) GetGroupInvitation(invitations *[]models.UserInvitation, groupId uint) error {
+func (ui *userInvitationController) GetGroupInvitation(invitations *[]models.UserInvitation, groupId uuid.UUID) error {
 
 	err := ui.doesGroupExist(groupId)
 	if err != nil {
@@ -196,7 +196,7 @@ func (u *userInvitationController) doesUserGroupExist(userId, groupId uuid.UUID)
 }
 
 // doesUserInvitationExist will check if specified group exist or not.
-func (u *userInvitationController) doesUserInvitationExist(invitationId uint) error {
+func (u *userInvitationController) doesUserInvitationExist(invitationId uuid.UUID) error {
 	err := u.db.Where("id = ?", invitationId).First(&models.UserInvitation{}).Error
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {

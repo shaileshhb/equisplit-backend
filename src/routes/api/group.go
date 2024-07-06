@@ -151,7 +151,7 @@ func (g *groupRouter) deleteGroup(c *fiber.Ctx) error {
 
 // deleteGroup will delete group for specified user.
 func (g *groupRouter) getUserGroups(c *fiber.Ctx) error {
-	group := &[]models.Group{}
+	group := &[]models.GroupDTO{}
 	parser := util.NewParser(c)
 
 	userId, err := uuid.Parse(c.Params("userId"))

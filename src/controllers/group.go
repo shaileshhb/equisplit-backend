@@ -14,7 +14,7 @@ type GroupController interface {
 	CreateGroup(group *models.Group) error
 	UpdateGroup(group *models.Group) error
 	DeleteGroup(group *models.Group) error
-	GetUserGroups(group *[]models.Group, userId uuid.UUID, totalCount *int64, parser *util.Parser) error
+	GetUserGroups(group *[]models.GroupDTO, userId uuid.UUID, totalCount *int64, parser *util.Parser) error
 }
 
 type groupController struct {
@@ -119,7 +119,7 @@ func (g *groupController) DeleteGroup(group *models.Group) error {
 }
 
 // GetUserGroups will fetch all groups for specified userId.
-func (g *groupController) GetUserGroups(groups *[]models.Group, userId uuid.UUID, totalCount *int64, parser *util.Parser) error {
+func (g *groupController) GetUserGroups(groups *[]models.GroupDTO, userId uuid.UUID, totalCount *int64, parser *util.Parser) error {
 
 	err := g.doesUserExist(userId)
 	if err != nil {
@@ -138,7 +138,7 @@ func (g *groupController) GetUserGroups(groups *[]models.Group, userId uuid.UUID
 
 	limit, offset := parser.ParseLimitAndOffset()
 
-	err = whereDB.Limit(limit).Offset(offset).Find(groups).Error
+	err = whereDB.Limit(limit).Offset(offset).Preload("User").Find(groups).Error
 	if err != nil {
 		return err
 	}

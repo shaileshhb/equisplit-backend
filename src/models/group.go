@@ -15,3 +15,17 @@ type Group struct {
 func (*Group) TableName() string {
 	return "groups"
 }
+
+// GroupDTO entity
+type GroupDTO struct {
+	Base
+	Name       string    `json:"name"`
+	User       User      `json:"User" gorm:"foreignKey:CreatedBy"`
+	CreatedBy  uuid.UUID `json:"createdBy"`
+	TotalSpent float64   `json:"totalSpent"`
+	Tag        *string   `json:"tag"`
+}
+
+func (*GroupDTO) TableName() string {
+	return "groups"
+}

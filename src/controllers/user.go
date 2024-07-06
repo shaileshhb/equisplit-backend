@@ -118,7 +118,7 @@ func (u *userController) validateUser(user *models.User) error {
 	var count int64 = 0
 	err := u.db.Model(&models.User{}).
 		Select("COUNT(DISTINCT(id))").
-		Where("users.`id` != ? AND users.`email` = ?", user.ID, user.Email).
+		Where("users.id != ? AND users.email = ?", user.ID, user.Email).
 		Unscoped().
 		Count(&count).Error
 	if err != nil {

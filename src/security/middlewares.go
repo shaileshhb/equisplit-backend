@@ -26,6 +26,7 @@ func NewAuthentication(log zerolog.Logger) Authentication {
 // MandatoryAuthMiddleware will check that authorization cookie is valid.
 func (a *Authentication) MandatoryAuthMiddleware(c *fiber.Ctx) error {
 	authHeader := c.Get("authorization")
+
 	// authHeader := c.Cookies("authorization")
 
 	if authHeader == "" {

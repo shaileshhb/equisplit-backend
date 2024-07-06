@@ -1,7 +1,6 @@
 package api
 
 import (
-	"fmt"
 	"net/http"
 
 	"github.com/gofiber/fiber/v2"
@@ -49,20 +48,6 @@ func (u *userRouter) RegisterRoutes(router fiber.Router) {
 	router.Get("/limited", u.limited)
 
 	u.log.Info().Msg("User routes registered")
-}
-
-func (u *userRouter) unlimited(c *fiber.Ctx) error {
-	fmt.Println(c.Hostname(), c.IP())
-
-	// err := u.con.Unlimited(c.IP())
-	// if err != nil {
-	// 	u.log.Error().Err(err).Msg("")
-	// 	return c.Status(http.StatusBadRequest).JSON(fiber.Map{
-	// 		"error": err.Error(),
-	// 	})
-	// }
-
-	return c.Status(http.StatusCreated).JSON("Unlimited")
 }
 
 func (u *userRouter) limited(c *fiber.Ctx) error {

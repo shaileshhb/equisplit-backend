@@ -39,6 +39,11 @@ func (u *userGroupController) AddUserToGroup(userGroup *models.UserGroup) error 
 		return err
 	}
 
+	err = u.doesUserExistInGroup(userGroup.UserId, userGroup.GroupId)
+	if err != nil {
+		return err
+	}
+
 	uow := db.NewUnitOfWork(u.db)
 	defer uow.RollBack()
 
@@ -194,6 +199,18 @@ func (u *userGroupController) doesGroupExist(groupId uuid.UUID) error {
 		return err
 	}
 	return nil
+}
+
+// doesUserExistInGroup will check if specified user exist in group or not.
+func (u *userGroupController) doesUserExistInGroup(userId, groupId uuid.UUID) error {
+	err := u.db.Where("user_groups.user_id = ? AND user_groups.group_id = ?", userId, groupId).First(&models.UserGroup{}).Error
+	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return nil
+		}
+		return err
+	}
+	return errors.New("user already exists in specified group")
 }
 
 // doesUserGroupExist will check if specified user_group exist or not.

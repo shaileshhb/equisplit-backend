@@ -38,10 +38,10 @@ func NewGroupRouter(con controllers.GroupController, auth security.Authenticatio
 
 // RegisterRoutes will register routes for group.
 func (g *groupRouter) RegisterRoutes(router fiber.Router) {
-	router.Get("/:userId<int>/group", g.auth.MandatoryAuthMiddleware, g.getUserGroups)
-	router.Post("/:userId<int>/group", g.auth.MandatoryAuthMiddleware, g.createGroup)
-	router.Put("/:userId<int>/group/:groupId<int>", g.auth.MandatoryAuthMiddleware, g.updateGroup)
-	router.Delete("/:userId<int>/group/:groupId<int>", g.auth.MandatoryAuthMiddleware, g.deleteGroup)
+	router.Get("/user/:userId<uuid>/groups", g.auth.MandatoryAuthMiddleware, g.getUserGroups)
+	router.Post("/user/:userId<uuid>/group", g.auth.MandatoryAuthMiddleware, g.createGroup)
+	router.Put("/user/:userId<uuid>/group/:groupId<uuid>", g.auth.MandatoryAuthMiddleware, g.updateGroup)
+	router.Delete("/user/:userId<uuid>/group/:groupId<uuid>", g.auth.MandatoryAuthMiddleware, g.deleteGroup)
 
 	g.log.Info().Msg("Group routes registered")
 }
@@ -58,7 +58,7 @@ func (g *groupRouter) createGroup(c *fiber.Ctx) error {
 		})
 	}
 
-	group.CreatedBy, err = uuid.Parse(c.Params("userId", "0"))
+	group.CreatedBy, err = uuid.Parse(c.Params("userId"))
 	if err != nil {
 		g.log.Error().Err(err).Msg("")
 		return c.Status(http.StatusBadRequest).JSON(fiber.Map{

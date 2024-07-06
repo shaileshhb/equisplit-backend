@@ -21,3 +21,8 @@ type BaseDTO struct {
 	CreatedAt time.Time      `json:"createdAt"`
 	DeletedAt gorm.DeletedAt `json:"-"`
 }
+
+func (u *Base) BeforeCreate(tx *gorm.DB) (err error) {
+	u.ID = uuid.New()
+	return
+}

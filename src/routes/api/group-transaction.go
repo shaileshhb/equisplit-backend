@@ -35,9 +35,9 @@ func NewGroupTransactionRouter(con controllers.GroupTransactionController, auth 
 
 // RegisterRoutes will register routes for user-group router.
 func (g *groupTransactionRouter) RegisterRoutes(router fiber.Router) {
-	router.Post("/group/:groupId<int>/transaction", g.auth.MandatoryAuthMiddleware, g.add)
-	router.Put("/transaction/:transactionId<int>", g.auth.MandatoryAuthMiddleware, g.markTransactionPaid)
-	router.Delete("/transaction/:transactionId<id>", g.auth.MandatoryAuthMiddleware, g.delete)
+	router.Post("/group/:groupId<uuid>/transaction", g.auth.MandatoryAuthMiddleware, g.add)
+	router.Put("/transaction/:transactionId<uuid>", g.auth.MandatoryAuthMiddleware, g.markTransactionPaid)
+	router.Delete("/transaction/:transactionId<uuid>", g.auth.MandatoryAuthMiddleware, g.delete)
 	g.log.Info().Msg("GroupTransaction routes registered")
 }
 

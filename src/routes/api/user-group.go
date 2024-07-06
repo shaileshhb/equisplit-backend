@@ -36,10 +36,10 @@ func NewUserGroupRouter(con controllers.UserGroupController, auth security.Authe
 
 // RegisterRoutes will register routes for user-group router.
 func (u *userGroupRouter) RegisterRoutes(router fiber.Router) {
-	router.Get("/group/:groupId<int>", u.auth.MandatoryAuthMiddleware, u.getGroupDetails)
-	router.Get("/user/:userId<int>/group", u.auth.MandatoryAuthMiddleware, u.getUserGroups)
-	router.Post("/group/:groupId<int>/user", u.auth.MandatoryAuthMiddleware, u.addUserToGroup)
-	router.Delete("/group/:groupId<int>/user/:userGroupId", u.auth.MandatoryAuthMiddleware, u.deleteUserFromGroup)
+	router.Get("/group/:groupId<uuid>", u.auth.MandatoryAuthMiddleware, u.getGroupDetails)
+	router.Get("/user/:userId<uuid>/group", u.auth.MandatoryAuthMiddleware, u.getUserGroups)
+	router.Post("/group/:groupId<uuid>/user", u.auth.MandatoryAuthMiddleware, u.addUserToGroup)
+	router.Delete("/group/:groupId<uuid>/user/:userGroupId<uuid>", u.auth.MandatoryAuthMiddleware, u.deleteUserFromGroup)
 	u.log.Info().Msg("UserGroup routes registered")
 }
 

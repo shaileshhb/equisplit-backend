@@ -7,6 +7,7 @@ import (
 	"sync"
 	"syscall"
 
+	"github.com/joho/godotenv"
 	"github.com/shaileshhb/equisplit/src/db"
 	"github.com/shaileshhb/equisplit/src/log"
 	"github.com/shaileshhb/equisplit/src/security"
@@ -15,6 +16,11 @@ import (
 
 func main() {
 	logger := log.InitializeLogger()
+	err := godotenv.Load()
+	if err != nil {
+		logger.Fatal().Err(err).Msg("Error loading.env file")
+		return
+	}
 
 	// Initialize the database
 	database := db.InitDB()

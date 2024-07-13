@@ -39,6 +39,7 @@ func (u *userGroupRouter) RegisterRoutes(router fiber.Router) {
 	router.Get("/group/:groupId<uuid>", u.auth.MandatoryAuthMiddleware, u.getGroupDetails)
 	router.Get("/user/:userId<uuid>/group", u.auth.MandatoryAuthMiddleware, u.getUserGroups)
 	router.Post("/group/:groupId<uuid>/user", u.auth.MandatoryAuthMiddleware, u.addUserToGroup)
+	router.Get("/group/:groupId<uuid>/users", u.auth.MandatoryAuthMiddleware, u.getGroupUsers)
 	router.Delete("/group/:groupId<uuid>/user/:userGroupId<uuid>", u.auth.MandatoryAuthMiddleware, u.deleteUserFromGroup)
 	u.log.Info().Msg("UserGroup routes registered")
 }
@@ -138,6 +139,29 @@ func (u *userGroupRouter) getUserGroups(c *fiber.Ctx) error {
 	}
 
 	err = u.con.GetUserGroups(&userGroups, userId)
+	if err != nil {
+		u.log.Error().Err(err).Msg("")
+		return c.Status(http.StatusBadRequest).JSON(fiber.Map{
+			"error": err.Error(),
+		})
+	}
+
+	return c.Status(http.StatusOK).JSON(userGroups)
+}
+
+// getGroupUsers will fetch all groups for specified user
+func (u *userGroupRouter) getGroupUsers(c *fiber.Ctx) error {
+	userGroups := []models.UserGroupDTO{}
+
+	groupId, err := uuid.Parse(c.Params("groupId"))
+	if err != nil {
+		u.log.Error().Err(err).Msg("")
+		return c.Status(http.StatusBadRequest).JSON(fiber.Map{
+			"error": err.Error(),
+		})
+	}
+
+	err = u.con.GetGroupUsers(&userGroups, groupId)
 	if err != nil {
 		u.log.Error().Err(err).Msg("")
 		return c.Status(http.StatusBadRequest).JSON(fiber.Map{

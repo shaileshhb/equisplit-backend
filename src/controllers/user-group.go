@@ -15,6 +15,7 @@ type UserGroupController interface {
 	DeleteUserFromGroup(userGroup *models.UserGroup) error
 	GetGroupDetails(userGroups *[]models.UserGroupDTO, groupId, userId uuid.UUID) error
 	GetUserGroups(userGroups *[]models.UserGroupDTO, userId uuid.UUID) error
+	GetGroupUsers(users *[]models.UserGroupDTO, groupId uuid.UUID) error
 }
 
 type userGroupController struct {
@@ -171,6 +172,26 @@ func (u *userGroupController) GetUserGroups(userGroups *[]models.UserGroupDTO, u
 		if err != nil {
 			return err
 		}
+	}
+
+	uow.Commit()
+	return nil
+}
+
+// GetGroupUsers will fetch all users in specified group.
+func (u *userGroupController) GetGroupUsers(users *[]models.UserGroupDTO, groupId uuid.UUID) error {
+
+	err := u.doesGroupExist(groupId)
+	if err != nil {
+		return err
+	}
+
+	uow := db.NewUnitOfWork(u.db)
+	defer uow.RollBack()
+
+	err = uow.DB.Where("group_id = ?", groupId).Preload("User").Find(users).Error
+	if err != nil {
+		return err
 	}
 
 	uow.Commit()

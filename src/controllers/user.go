@@ -143,5 +143,11 @@ func (u *userController) searchQuery(uow *db.UnitOfWork, parser *util.Parser) *g
 		queryDB = uow.DB.Where("users.name LIKE ?", "%"+parser.GetQuery("name")+"%")
 	}
 
+	if len(parser.GetQuery("groupIdNI")) > 0 {
+		queryDB = uow.DB.Joins("LEFT JOIN user_groups ON user_groups.user_id = users.id"+
+			" AND user_groups.group_id IN (?) ", parser.GetQuery("groupIdNI")).
+			Where("user_groups.deleted_at IS NULL AND user_groups.id IS NULL")
+	}
+
 	return queryDB
 }

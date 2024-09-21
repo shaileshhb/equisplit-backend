@@ -46,6 +46,7 @@ func (u *userInvitationRouter) RegisterRoutes(router fiber.Router) {
 
 // add will create invitation for specified user in the group
 func (u *userInvitationRouter) add(c *fiber.Ctx) error {
+	u.log.Info().Msg("========= add route called =========")
 	userInvitation := models.UserInvitation{}
 
 	err := c.BodyParser(&userInvitation)
@@ -73,6 +74,7 @@ func (u *userInvitationRouter) add(c *fiber.Ctx) error {
 
 // updateInvitation will mark invitation as accepted and add user in the group that they were invited to.
 func (u *userInvitationRouter) updateInvitation(c *fiber.Ctx) error {
+	u.log.Info().Msg("========= updateInvitation route called =========")
 	userInvitation := models.UserInvitation{}
 
 	err := c.BodyParser(&userInvitation)
@@ -104,6 +106,7 @@ func (u *userInvitationRouter) updateInvitation(c *fiber.Ctx) error {
 
 // deleteInvitation will delete the specified invitation
 func (u *userInvitationRouter) deleteInvitation(c *fiber.Ctx) error {
+	u.log.Info().Msg("========= deleteInvitation route called =========")
 	userInvitation := models.UserInvitation{}
 
 	err := c.BodyParser(&userInvitation)
@@ -135,6 +138,7 @@ func (u *userInvitationRouter) deleteInvitation(c *fiber.Ctx) error {
 
 // getGroupInvitation will fetch all invitations of specified group.
 func (u *userInvitationRouter) getGroupInvitation(c *fiber.Ctx) error {
+	u.log.Info().Msg("========= GetGroupInvitation route called =========")
 	userInvitation := []models.UserInvitation{}
 
 	groupId, err := uuid.Parse(c.Params("groupId"))

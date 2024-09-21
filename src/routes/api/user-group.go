@@ -46,6 +46,7 @@ func (u *userGroupRouter) RegisterRoutes(router fiber.Router) {
 
 // addUserToGroup will add user to specified group
 func (u *userGroupRouter) addUserToGroup(c *fiber.Ctx) error {
+	u.log.Info().Msg("========= addUserToGroup route called =========")
 	userGroup := models.UserGroup{}
 
 	err := c.BodyParser(&userGroup)
@@ -77,6 +78,7 @@ func (u *userGroupRouter) addUserToGroup(c *fiber.Ctx) error {
 
 // deleteUserFromGroup will delete specified user from group
 func (u *userGroupRouter) deleteUserFromGroup(c *fiber.Ctx) error {
+	u.log.Info().Msg("========= deleteUserFromGroup route called =========")
 	userGroup := models.UserGroup{}
 
 	id, err := uuid.Parse(c.Params("userGroupId"))
@@ -102,6 +104,7 @@ func (u *userGroupRouter) deleteUserFromGroup(c *fiber.Ctx) error {
 
 // getGroupDetails will fetch all user details from specified group
 func (u *userGroupRouter) getGroupDetails(c *fiber.Ctx) error {
+	u.log.Info().Msg("========= getGroupDetails route called =========")
 	userGroups := []models.UserGroupDTO{}
 
 	groupId, err := uuid.Parse(c.Params("groupId"))
@@ -128,6 +131,7 @@ func (u *userGroupRouter) getGroupDetails(c *fiber.Ctx) error {
 
 // getUserGroups will fetch all groups for specified user
 func (u *userGroupRouter) getUserGroups(c *fiber.Ctx) error {
+	u.log.Info().Msg("========= getUserGroups route called =========")
 	userGroups := []models.UserGroupDTO{}
 
 	userId, err := uuid.Parse(c.Params("userId"))
@@ -151,6 +155,7 @@ func (u *userGroupRouter) getUserGroups(c *fiber.Ctx) error {
 
 // getGroupUsers will fetch all groups for specified user
 func (u *userGroupRouter) getGroupUsers(c *fiber.Ctx) error {
+	u.log.Info().Msg("========= getGroupUsers route called =========")
 	userGroups := []models.UserGroupDTO{}
 
 	groupId, err := uuid.Parse(c.Params("groupId"))

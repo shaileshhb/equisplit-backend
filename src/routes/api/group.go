@@ -48,6 +48,7 @@ func (g *groupRouter) RegisterRoutes(router fiber.Router) {
 
 // createGroup will create new group for specified user.
 func (g *groupRouter) createGroup(c *fiber.Ctx) error {
+	g.log.Info().Msg("========= createGroup route called =========")
 	group := &models.Group{}
 
 	err := c.BodyParser(group)
@@ -79,6 +80,7 @@ func (g *groupRouter) createGroup(c *fiber.Ctx) error {
 
 // updateGroup will update group for specified user.
 func (g *groupRouter) updateGroup(c *fiber.Ctx) error {
+	g.log.Info().Msg("========= updateGroup route called =========")
 	group := &models.Group{}
 
 	err := c.BodyParser(group)
@@ -118,6 +120,7 @@ func (g *groupRouter) updateGroup(c *fiber.Ctx) error {
 
 // deleteGroup will delete group for specified user.
 func (g *groupRouter) deleteGroup(c *fiber.Ctx) error {
+	g.log.Info().Msg("========= deleteGroup route called =========")
 	group := &models.Group{}
 
 	userId, err := uuid.Parse(c.Params("userId"))
@@ -151,6 +154,7 @@ func (g *groupRouter) deleteGroup(c *fiber.Ctx) error {
 
 // deleteGroup will delete group for specified user.
 func (g *groupRouter) getUserGroups(c *fiber.Ctx) error {
+	g.log.Info().Msg("========= getUserGroups route called =========")
 	group := &[]models.GroupDTO{}
 	parser := util.NewParser(c)
 

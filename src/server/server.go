@@ -4,6 +4,7 @@ import (
 	"sync"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/rs/zerolog"
 	"github.com/samber/lo"
 	"github.com/shaileshhb/equisplit/src/models"
@@ -52,6 +53,9 @@ func (ser *Server) InitializeRouter() {
 		AppName: ser.Name,
 	})
 
+	app.Use(cors.New(cors.Config{
+		AllowOrigins: "*",
+	}))
 	app.Use(ser.Auth.HttpLogger)
 
 	app.Get("/", func(c *fiber.Ctx) error {

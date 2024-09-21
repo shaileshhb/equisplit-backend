@@ -41,8 +41,8 @@ func (u *userRouter) RegisterRoutes(router fiber.Router) {
 	router.Post("/register", u.register)
 	router.Post("/login", u.login)
 	router.Get("/logout", u.logout)
-	router.Get("/user/:userId<int>", u.auth.MandatoryAuthMiddleware, u.getUser)
-	router.Get("/user", u.auth.MandatoryAuthMiddleware, u.getUsers)
+	router.Get("/users/:userId<int>", u.auth.MandatoryAuthMiddleware, u.getUser)
+	router.Get("/users", u.auth.MandatoryAuthMiddleware, u.getUsers)
 
 	// router.Get("/unlimited", u.auth.TokenBucketRateLimiter, u.unlimited)
 	router.Get("/limited", u.limited)
@@ -56,6 +56,7 @@ func (u *userRouter) limited(c *fiber.Ctx) error {
 
 // register will add user.
 func (u *userRouter) register(c *fiber.Ctx) error {
+	u.log.Info().Msg("========= Register route called =========")
 	user := &models.User{}
 
 	err := c.BodyParser(user)
@@ -101,6 +102,7 @@ func (u *userRouter) register(c *fiber.Ctx) error {
 
 // login will check user details and set the cookie
 func (u *userRouter) login(c *fiber.Ctx) error {
+	u.log.Info().Msg("========= Login route called =========")
 	user := &models.User{}
 
 	err := c.BodyParser(user)
@@ -146,6 +148,7 @@ func (u *userRouter) login(c *fiber.Ctx) error {
 
 // getUser will fetch specified user details.
 func (u *userRouter) getUser(c *fiber.Ctx) error {
+	u.log.Info().Msg("========= GetUser route called =========")
 	user := models.UserDTO{}
 
 	userId, err := uuid.Parse(c.Params("userId"))
@@ -170,7 +173,8 @@ func (u *userRouter) getUser(c *fiber.Ctx) error {
 }
 
 // logout will log user out from the system
-func (g *userRouter) logout(c *fiber.Ctx) error {
+func (u *userRouter) logout(c *fiber.Ctx) error {
+	u.log.Info().Msg("========= Logout route called =========")
 
 	return c.Status(http.StatusOK).JSON(fiber.Map{
 		"message": "user successfully logged out",
@@ -179,6 +183,7 @@ func (g *userRouter) logout(c *fiber.Ctx) error {
 
 // getUsers will fetch specified user details.
 func (u *userRouter) getUsers(c *fiber.Ctx) error {
+	u.log.Info().Msg("========= GetUsers route called =========")
 	users := []models.UserDTO{}
 	parser := util.NewParser(c)
 

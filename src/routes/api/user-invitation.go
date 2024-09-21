@@ -193,5 +193,5 @@ func (u *userInvitationRouter) getInvitations(c *fiber.Ctx) error {
 		})
 	}
 
-	return c.Status(http.StatusOK).JSON(nil)
+	return c.Status(http.StatusOK).JSON(userInvitations)
 }

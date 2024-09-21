@@ -127,7 +127,7 @@ func (ui *userInvitationController) GetInvitations(invitations *[]models.UserInv
 
 	queryDB := ui.searchQuery(uow, parser)
 
-	err := queryDB.Debug().Find(&invitations).Error
+	err := queryDB.Debug().Preload("User").Preload("Group").Preload("InvitedByUser").Find(&invitations).Error
 	if err != nil {
 		return err
 	}

@@ -43,9 +43,9 @@ func (u *UserInvitation) Validate() error {
 // UserInvitationDTO entity
 type UserInvitationDTO struct {
 	Base
-	User          User       `json:"-"`
-	Group         Group      `json:"group" gorm:"foreignKey:GroupId"`
-	InvitedByUser User       `json:"invitedByUser" gorm:"foreignKey:InvitedBy"`
+	User          *User      `json:"user" gorm:"foreignKey:UserId"`
+	Group         *Group     `json:"group" gorm:"foreignKey:GroupId"`
+	InvitedByUser *User      `json:"invitedByUser" gorm:"foreignKey:InvitedBy"`
 	InvitedBy     *uuid.UUID `json:"invitedBy"`
 	UserId        uuid.UUID  `json:"userId"`
 	GroupId       uuid.UUID  `json:"groupId"`

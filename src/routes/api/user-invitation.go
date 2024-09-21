@@ -15,7 +15,7 @@ import (
 type UserInvitationRouter interface {
 	RegisterRoutes(router fiber.Router)
 	add(c *fiber.Ctx) error
-	updateInvitation(c *fiber.Ctx) error
+	acceptInvitation(c *fiber.Ctx) error
 	deleteInvitation(c *fiber.Ctx) error
 	getGroupInvitation(c *fiber.Ctx) error
 }
@@ -38,9 +38,9 @@ func NewUserInvitationRouter(con controllers.UserInvitationController, auth secu
 // RegisterRoutes will register routes for user-group router.
 func (u *userInvitationRouter) RegisterRoutes(router fiber.Router) {
 	router.Post("/user-invitations", u.auth.MandatoryAuthMiddleware, u.add)
-	router.Put("/user-invitation/:userInvitationId<uint>", u.auth.MandatoryAuthMiddleware, u.updateInvitation)
-	router.Delete("/user-invitation/:userInvitationId<uint>", u.auth.MandatoryAuthMiddleware, u.deleteInvitation)
-	router.Get("/group/:groupId<uint>/user-invitation", u.auth.MandatoryAuthMiddleware, u.getGroupInvitation)
+	router.Put("/user-invitations/:userInvitationId<uint>", u.auth.MandatoryAuthMiddleware, u.acceptInvitation)
+	router.Delete("/user-invitations/:userInvitationId<uint>", u.auth.MandatoryAuthMiddleware, u.deleteInvitation)
+	router.Get("/groups/:groupId<uint>/user-invitations", u.auth.MandatoryAuthMiddleware, u.getGroupInvitation)
 	router.Get("/user-invitations", u.auth.MandatoryAuthMiddleware, u.getInvitations)
 
 	u.log.Info().Msg("UserInvitation routes registered")
@@ -82,9 +82,9 @@ func (u *userInvitationRouter) add(c *fiber.Ctx) error {
 	return c.Status(http.StatusCreated).JSON(nil)
 }
 
-// updateInvitation will mark invitation as accepted and add user in the group that they were invited to.
-func (u *userInvitationRouter) updateInvitation(c *fiber.Ctx) error {
-	u.log.Info().Msg("========= updateInvitation route called =========")
+// acceptInvitation will mark invitation as accepted and add user in the group that they were invited to.
+func (u *userInvitationRouter) acceptInvitation(c *fiber.Ctx) error {
+	u.log.Info().Msg("========= acceptInvitation route called =========")
 	userInvitation := models.UserInvitation{}
 
 	err := c.BodyParser(&userInvitation)
@@ -92,6 +92,15 @@ func (u *userInvitationRouter) updateInvitation(c *fiber.Ctx) error {
 		u.log.Error().Err(err).Msg("")
 		return c.Status(http.StatusBadRequest).JSON(fiber.Map{
 			"error": err.Error(),
+		})
+	}
+
+	userInterface := c.Locals("user")
+	user := userInterface.(*models.User)
+	if userInvitation.UserId != user.Id {
+		u.log.Error().Err(err).Msg("")
+		return c.Status(http.StatusForbidden).JSON(fiber.Map{
+			"error": "Invalid invitation specified",
 		})
 	}
 
@@ -103,7 +112,7 @@ func (u *userInvitationRouter) updateInvitation(c *fiber.Ctx) error {
 		})
 	}
 
-	err = u.con.UpdateInvitation(&userInvitation)
+	err = u.con.AcceptInvitation(&userInvitation)
 	if err != nil {
 		u.log.Error().Err(err).Msg("")
 		return c.Status(http.StatusBadRequest).JSON(fiber.Map{

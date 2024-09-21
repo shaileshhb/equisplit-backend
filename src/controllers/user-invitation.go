@@ -13,7 +13,7 @@ import (
 
 type UserInvitationController interface {
 	Add(invitation *models.UserInvitation) error
-	UpdateInvitation(invitation *models.UserInvitation) error
+	AcceptInvitation(invitation *models.UserInvitation) error
 	DeleteInvitation(invitation *models.UserInvitation) error
 	GetInvitations(invitations *[]models.UserInvitationDTO, parser *util.Parser) error
 	GetGroupInvitation(invitations *[]models.UserInvitation, groupId uuid.UUID) error
@@ -77,8 +77,8 @@ func (ui *userInvitationController) Add(invitation *models.UserInvitation) error
 	return nil
 }
 
-// UpdateInvitation will mark invitation as accepted and add user in the group that they were invited to.
-func (ui *userInvitationController) UpdateInvitation(invitation *models.UserInvitation) error {
+// AcceptInvitation will mark invitation as accepted and add user in the group that they were invited to.
+func (ui *userInvitationController) AcceptInvitation(invitation *models.UserInvitation) error {
 
 	err := ui.doesUserInvitationExist(invitation.Id)
 	if err != nil {

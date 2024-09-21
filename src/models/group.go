@@ -10,6 +10,7 @@ type Group struct {
 	CreatedBy  uuid.UUID `json:"createdBy" gorm:"index;type:uuid"`
 	TotalSpent float64   `json:"totalSpent" gorm:"type:float;default:0"`
 	Tag        *string   `json:"tag" gorm:"type:varchar(50)"`
+	// InviteLink string    `json:"inviteLink" gorm:"type:varchar(200)"`
 }
 
 func (*Group) TableName() string {

@@ -1,6 +1,7 @@
 package models
 
 import (
+	"errors"
 	"time"
 
 	"github.com/google/uuid"
@@ -20,5 +21,38 @@ type UserInvitation struct {
 }
 
 func (*UserInvitation) TableName() string {
+	return "user_invitations"
+}
+
+func (u *UserInvitation) Validate() error {
+	if u.UserId == uuid.Nil {
+		return errors.New("user must be specified")
+	}
+
+	if u.GroupId == uuid.Nil {
+		return errors.New("group must be specified")
+	}
+
+	if u.InvitedBy == nil || *u.InvitedBy == uuid.Nil {
+		return errors.New("invited by must be specified")
+	}
+
+	return nil
+}
+
+// UserInvitationDTO entity
+type UserInvitationDTO struct {
+	Base
+	User          User       `json:"-"`
+	Group         Group      `json:"group" gorm:"foreignKey:GroupId"`
+	InvitedByUser User       `json:"invitedByUser" gorm:"foreignKey:InvitedBy"`
+	InvitedBy     *uuid.UUID `json:"invitedBy"`
+	UserId        uuid.UUID  `json:"userId"`
+	GroupId       uuid.UUID  `json:"groupId"`
+	ExpiresOn     *time.Time `json:"-"`
+	IsAccepted    *bool      `json:"isAccepted"`
+}
+
+func (*UserInvitationDTO) TableName() string {
 	return "user_invitations"
 }

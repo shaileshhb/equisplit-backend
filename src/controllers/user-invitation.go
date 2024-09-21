@@ -7,6 +7,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/shaileshhb/equisplit/src/db"
 	"github.com/shaileshhb/equisplit/src/models"
+	"github.com/shaileshhb/equisplit/src/util"
 	"gorm.io/gorm"
 )
 
@@ -14,6 +15,7 @@ type UserInvitationController interface {
 	Add(invitation *models.UserInvitation) error
 	UpdateInvitation(invitation *models.UserInvitation) error
 	DeleteInvitation(invitation *models.UserInvitation) error
+	GetInvitations(invitations *[]models.UserInvitationDTO, parser *util.Parser) error
 	GetGroupInvitation(invitations *[]models.UserInvitation, groupId uuid.UUID) error
 }
 
@@ -117,6 +119,23 @@ func (ui *userInvitationController) UpdateInvitation(invitation *models.UserInvi
 	return nil
 }
 
+// GetInvitations will fetch all invitations.
+func (ui *userInvitationController) GetInvitations(invitations *[]models.UserInvitationDTO, parser *util.Parser) error {
+
+	uow := db.NewUnitOfWork(ui.db)
+	defer uow.RollBack()
+
+	queryDB := ui.searchQuery(uow, parser)
+
+	err := queryDB.Debug().Find(&invitations).Error
+	if err != nil {
+		return err
+	}
+
+	uow.Commit()
+	return nil
+}
+
 // GetGroupInvitation will fetch all invitations of specified group.
 func (ui *userInvitationController) GetGroupInvitation(invitations *[]models.UserInvitation, groupId uuid.UUID) error {
 
@@ -155,6 +174,16 @@ func (ui *userInvitationController) DeleteInvitation(invitation *models.UserInvi
 
 	uow.Commit()
 	return nil
+}
+
+func (u *userInvitationController) searchQuery(uow *db.UnitOfWork, parser *util.Parser) *gorm.DB {
+	queryDB := uow.DB
+
+	if len(parser.GetQuery("userId")) > 0 {
+		queryDB = uow.DB.Where("user_invitations.user_id = ?", parser.GetQuery("userId"))
+	}
+
+	return queryDB
 }
 
 // doesUserExist will check if specified user exist or not.

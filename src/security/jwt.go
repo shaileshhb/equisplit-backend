@@ -11,11 +11,11 @@ import (
 )
 
 // GenerateInviteJwt will create a JWT for the given group
-func GenerateInviteJwt(group *models.Group) (string, error) {
+func GenerateInviteJwt(groupId uuid.UUID) (string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"sub": group.Id,
+		"sub": groupId,
 		"iat": jwt.NewNumericDate(time.Now()),
-		"exp": jwt.NewNumericDate(time.Now().Add(time.Hour * 24 * 7)), // 7 days
+		// "exp": jwt.NewNumericDate(time.Now().Add(time.Hour * 24 * 7)), // 7 days
 	})
 	return token.SignedString([]byte(os.Getenv("JWT_KEY")))
 }

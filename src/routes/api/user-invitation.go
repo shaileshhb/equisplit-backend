@@ -9,6 +9,7 @@ import (
 	"github.com/shaileshhb/equisplit/src/controllers"
 	"github.com/shaileshhb/equisplit/src/models"
 	"github.com/shaileshhb/equisplit/src/security"
+	"github.com/shaileshhb/equisplit/src/util"
 )
 
 type UserInvitationRouter interface {
@@ -36,10 +37,11 @@ func NewUserInvitationRouter(con controllers.UserInvitationController, auth secu
 
 // RegisterRoutes will register routes for user-group router.
 func (u *userInvitationRouter) RegisterRoutes(router fiber.Router) {
-	router.Post("/user-invitation", u.auth.MandatoryAuthMiddleware, u.add)
+	router.Post("/user-invitations", u.auth.MandatoryAuthMiddleware, u.add)
 	router.Put("/user-invitation/:userInvitationId<uint>", u.auth.MandatoryAuthMiddleware, u.updateInvitation)
 	router.Delete("/user-invitation/:userInvitationId<uint>", u.auth.MandatoryAuthMiddleware, u.deleteInvitation)
 	router.Get("/group/:groupId<uint>/user-invitation", u.auth.MandatoryAuthMiddleware, u.getGroupInvitation)
+	router.Get("/user-invitations", u.auth.MandatoryAuthMiddleware, u.getInvitations)
 
 	u.log.Info().Msg("UserInvitation routes registered")
 }
@@ -60,6 +62,14 @@ func (u *userInvitationRouter) add(c *fiber.Ctx) error {
 	userInterface := c.Locals("user")
 	user := userInterface.(*models.User)
 	userInvitation.InvitedBy = &user.Id
+
+	err = userInvitation.Validate()
+	if err != nil {
+		u.log.Error().Err(err).Msg("")
+		return c.Status(http.StatusBadRequest).JSON(fiber.Map{
+			"error": err.Error(),
+		})
+	}
 
 	err = u.con.Add(&userInvitation)
 	if err != nil {
@@ -150,6 +160,23 @@ func (u *userInvitationRouter) getGroupInvitation(c *fiber.Ctx) error {
 	}
 
 	err = u.con.GetGroupInvitation(&userInvitation, groupId)
+	if err != nil {
+		u.log.Error().Err(err).Msg("")
+		return c.Status(http.StatusBadRequest).JSON(fiber.Map{
+			"error": err.Error(),
+		})
+	}
+
+	return c.Status(http.StatusOK).JSON(nil)
+}
+
+func (u *userInvitationRouter) getInvitations(c *fiber.Ctx) error {
+	u.log.Info().Msg("========= getInvitations route called =========")
+	var userInvitations []models.UserInvitationDTO
+
+	parser := util.NewParser(c)
+
+	err := u.con.GetInvitations(&userInvitations, parser)
 	if err != nil {
 		u.log.Error().Err(err).Msg("")
 		return c.Status(http.StatusBadRequest).JSON(fiber.Map{

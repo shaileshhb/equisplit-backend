@@ -61,6 +61,11 @@ func (g *groupController) CreateGroup(group *models.Group) error {
 		return err
 	}
 
+	// token, err := security.GenerateInviteJwt(group.Id)
+	// if err != nil {
+	// 	return err
+	// }
+
 	uow.Commit()
 	return nil
 }

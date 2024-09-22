@@ -98,7 +98,7 @@ func (ui *userInvitationController) AcceptInvitation(invitation *models.UserInvi
 	uow := db.NewUnitOfWork(ui.db)
 	defer uow.RollBack()
 
-	err = uow.DB.Updates(map[string]interface{}{
+	err = uow.DB.Model(&models.UserInvitation{}).Where("id = ?", invitation.Id).Updates(map[string]interface{}{
 		"IsAccepted": invitation.IsAccepted,
 	}).Error
 	if err != nil {

@@ -10,6 +10,7 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: equisplit
+    network_mode: "host"
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 3s
@@ -33,14 +34,14 @@ services:
     ports:
       - "5050:80"
 
-  redis-cache:
-    image: redis
-    restart: always
-    ports:
-      - '6379:6379'
-    # command: redis-server --save 20 1 --loglevel warning --requirepass equisplit
-    volumes: 
-      - cache:/data
+  # redis-cache:
+  #   image: redis
+  #   restart: always
+  #   ports:
+  #     - '6379:6379'
+  #   # command: redis-server --save 20 1 --loglevel warning --requirepass equisplit
+  #   volumes: 
+  #     - cache:/data
 
   # equisplit:
   #   container_name: equisplit
